@@ -110,11 +110,8 @@ bool IsChangjieEnglishModeActive()
 {
     if (!IsChangjieIMEActive()) return false;
 
-    // When the IME is in English mode, it's typically not open
-    // or the IME_CMODE_NATIVE flag is not set
-    BOOL imeOpen = GetImeOpenStatus();
-    if (!imeOpen) return true;
-
+    // Only check conversion mode (CMODE) - do not check if IME is opened
+    // as the open status is always false regardless
     // Try to get conversion mode via WM_IME_CONTROL first (primary method)
     DWORD mode = GetCurrentConversionMode();
 
