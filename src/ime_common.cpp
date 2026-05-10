@@ -95,40 +95,15 @@ bool IsChangjieChineseModeActive()
     // Try to get conversion mode via WM_IME_CONTROL first (primary method)
     DWORD mode = GetCurrentConversionMode();
 
-    // If that fails, try the fallback method
-    if (mode == static_cast<DWORD>(-1)) {
+    // If that fails or returns an unexpected value, try the fallback method
+    if (mode == static_cast<DWORD>(-1) || mode == 0) {
         mode = GetConversionModeViaImmContext();
     }
 
-    // If we still can't get the mode, assume we're not in Chinese mode
     if (mode == static_cast<DWORD>(-1)) return false;
 
     // Check if IME_CMODE_NATIVE is set (indicates Chinese character input mode)
     return (mode & IME_CMODE_NATIVE) != 0;
-}
-
-bool IsChangjieEnglishModeActive()
-{
-    if (!IsChangjieIMEActive()) return false;
-
-    // When the IME is not open, it's in English (alphanumeric) mode
-    // The open status indicates whether the IME is actively accepting native input
-    BOOL imeOpen = GetImeOpenStatus();
-    if (!imeOpen) return true;
-
-    // Try to get conversion mode via WM_IME_CONTROL first (primary method)
-    DWORD mode = GetCurrentConversionMode();
-
-    // If that fails, try the fallback method
-    if (mode == static_cast<DWORD>(-1)) {
-        mode = GetConversionModeViaImmContext();
-    }
-
-    // If we still can't get the mode, assume we're not in English mode
-    if (mode == static_cast<DWORD>(-1)) return false;
-
-    // Check if IME_CMODE_NATIVE is NOT set (indicates English/alphanumeric input mode)
-    return (mode & IME_CMODE_NATIVE) == 0;
 }
 
 // ---------------------------------------------------------------------------

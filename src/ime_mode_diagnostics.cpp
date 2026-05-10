@@ -191,7 +191,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     output << L"  IsChangjieIMEActive(): " << (IsChangjieIMEActive() ? L"TRUE" : L"FALSE") << L"\n";
     output << L"  IsEnglishUSActive(): " << (IsEnglishUSActive() ? L"TRUE" : L"FALSE") << L"\n";
     output << L"  IsChangjieChineseModeActive(): " << (IsChangjieChineseModeActive() ? L"TRUE" : L"FALSE") << L"\n";
-    output << L"  IsChangjieEnglishModeActive(): " << (IsChangjieEnglishModeActive() ? L"TRUE" : L"FALSE") << L"\n";
 
     CoUninitialize();
 

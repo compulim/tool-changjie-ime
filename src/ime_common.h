@@ -74,9 +74,6 @@ bool IsEnglishUSActive();
 // Return true if the ChangJie IME is active AND in Chinese (native) input mode.
 bool IsChangjieChineseModeActive();
 
-// Return true if the ChangJie IME is active AND in English (alphanumeric) input mode.
-bool IsChangjieEnglishModeActive();
-
 // Get conversion mode using ImmGetConversionStatus (alternative to WM_IME_CONTROL).
 DWORD GetConversionModeViaImmContext();
 
