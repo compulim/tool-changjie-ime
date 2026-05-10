@@ -88,6 +88,13 @@ add_ime_tool(toggle-changjie-english src/toggle_changjie_english.cpp)
 add_ime_tool(list-ime-profiles src/list_ime_profiles.cpp)
 
 # ---------------------------------------------------------------------------
+# Diagnostic tool: ime-mode-diagnostics
+#   Display detailed information about the current IME state.
+#   Helps diagnose issues with Changjie mode detection.
+# ---------------------------------------------------------------------------
+add_ime_tool(ime-mode-diagnostics src/ime_mode_diagnostics.cpp)
+
+# ---------------------------------------------------------------------------
 # Installation rules (used by the GitHub Actions packaging step)
 # ---------------------------------------------------------------------------
 install(TARGETS
@@ -98,5 +105,6 @@ install(TARGETS
     switch-to-changjie-chinese
     toggle-changjie-english
     list-ime-profiles
+    ime-mode-diagnostics
     RUNTIME DESTINATION bin
 )
