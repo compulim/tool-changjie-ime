@@ -93,6 +93,7 @@ add_ime_tool(list-ime-profiles src/list_ime_profiles.cpp)
 #   Helps diagnose issues with Changjie mode detection.
 # ---------------------------------------------------------------------------
 add_ime_tool(ime-mode-diagnostics src/ime_mode_diagnostics.cpp)
+target_link_libraries(ime-mode-diagnostics PRIVATE msctf)
 
 # ---------------------------------------------------------------------------
 # Installation rules (used by the GitHub Actions packaging step)

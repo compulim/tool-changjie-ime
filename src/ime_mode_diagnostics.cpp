@@ -9,8 +9,6 @@
 #include <iomanip>
 #include <ctfutb.h>
 
-#pragma comment(lib, "msctf.lib")
-
 // Helper to convert GUID to string
 std::wstring GuidToString(const GUID& guid)
 {
