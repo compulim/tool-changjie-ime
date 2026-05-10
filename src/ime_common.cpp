@@ -86,8 +86,23 @@ bool IsEnglishUSActive()
 bool IsChangjieChineseModeActive()
 {
     if (!IsChangjieIMEActive()) return false;
+
+    // When the IME is in English mode (not open), it's not in Chinese mode
+    // The open status indicates whether the IME is actively accepting native input
+    BOOL imeOpen = GetImeOpenStatus();
+    if (!imeOpen) return false;
+
+    // Try to get conversion mode via WM_IME_CONTROL first (primary method)
     DWORD mode = GetCurrentConversionMode();
+
+    // If that fails or returns an unexpected value, try the fallback method
+    if (mode == static_cast<DWORD>(-1) || mode == 0) {
+        mode = GetConversionModeViaImmContext();
+    }
+
     if (mode == static_cast<DWORD>(-1)) return false;
+
+    // Check if IME_CMODE_NATIVE is set (indicates Chinese character input mode)
     return (mode & IME_CMODE_NATIVE) != 0;
 }
 
@@ -176,6 +191,38 @@ DWORD GetCurrentConversionMode()
 
     LRESULT mode = SendMessage(imeWnd, WM_IME_CONTROL, IMC_GETCONVERSIONMODE, 0);
     return static_cast<DWORD>(mode);
+}
+
+DWORD GetConversionModeViaImmContext()
+{
+    HWND hwnd = GetForegroundWindow();
+    if (!hwnd) return static_cast<DWORD>(-1);
+
+    HIMC himc = ImmGetContext(hwnd);
+    if (!himc) return static_cast<DWORD>(-1);
+
+    DWORD conversionMode = 0;
+    DWORD sentenceMode = 0;
+    BOOL result = ImmGetConversionStatus(himc, &conversionMode, &sentenceMode);
+
+    ImmReleaseContext(hwnd, himc);
+
+    return result ? conversionMode : static_cast<DWORD>(-1);
+}
+
+BOOL GetImeOpenStatus()
+{
+    HWND hwnd = GetForegroundWindow();
+    if (!hwnd) return FALSE;
+
+    HIMC himc = ImmGetContext(hwnd);
+    if (!himc) return FALSE;
+
+    BOOL isOpen = ImmGetOpenStatus(himc);
+
+    ImmReleaseContext(hwnd, himc);
+
+    return isOpen;
 }
 
 HRESULT SetConversionMode(DWORD mode)
