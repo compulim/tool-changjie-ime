@@ -108,10 +108,8 @@ bool IsChangjieChineseModeActive()
 
 bool IsChangjieEnglishModeActive()
 {
-    if (!IsChangjieIMEActive()) return false;
-
-    // Only check conversion mode (CMODE) - do not check if IME is opened
-    // as the open status is always false regardless
+    // Assume ChangJie IME is active - only check conversion mode (CMODE)
+    // Do not check if IME is opened as the open status is always false regardless
     // Try to get conversion mode via WM_IME_CONTROL first (primary method)
     DWORD mode = GetCurrentConversionMode();
 
