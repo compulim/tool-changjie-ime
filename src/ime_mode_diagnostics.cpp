@@ -165,7 +165,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
                     if (SUCCEEDED(pItem->GetTooltipString(&tooltip)) && tooltip) {
                         output << L"  Item " << itemCount << L": " << tooltip << L"\n";
 
-                        // Try to get the icon text/description
+                        // Try to get button information
                         ITfLangBarItemButton* pButton = nullptr;
                         if (SUCCEEDED(pItem->QueryInterface(IID_ITfLangBarItemButton,
                                                            reinterpret_cast<void**>(&pButton)))) {
@@ -174,7 +174,23 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
                                 output << L"    Text: " << text << L"\n";
                                 SysFreeString(text);
                             }
+
+                            // Get icon handle
+                            HICON hIcon = nullptr;
+                            if (SUCCEEDED(pButton->GetIcon(&hIcon)) && hIcon) {
+                                output << L"    Icon Handle: 0x" << std::hex
+                                       << reinterpret_cast<ULONG_PTR>(hIcon) << std::dec << L"\n";
+                            }
+
                             pButton->Release();
+                        }
+
+                        // Check if it's a bitmap button
+                        ITfLangBarItemBitmapButton* pBitmapButton = nullptr;
+                        if (SUCCEEDED(pItem->QueryInterface(IID_ITfLangBarItemBitmapButton,
+                                                           reinterpret_cast<void**>(&pBitmapButton)))) {
+                            output << L"    Type: Bitmap Button\n";
+                            pBitmapButton->Release();
                         }
 
                         // Try to get system text information
