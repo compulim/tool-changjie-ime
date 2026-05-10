@@ -82,6 +82,8 @@ jobs:
             "build\Release\switch-to-changjie-chinese.exe",
             "build\Release\toggle-changjie-english.exe",
             "build\Release\list-ime-profiles.exe",
+            "build\Release\ime-mode-diagnostics.exe",
+            "build\Release\changjie-english-watcher.exe",
             "changjie-ime-tools-$arch.zip"
           )
 
