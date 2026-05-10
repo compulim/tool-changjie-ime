@@ -53,19 +53,22 @@ HRESULT GetActiveProfile(TF_INPUTPROCESSORPROFILE* pProfile)
 
 bool IsChangjieIMEActive()
 {
-    // First check the foreground window's actual keyboard layout
-    // This is the most reliable indicator of what IME is active
+    // First check the current thread's keyboard layout (0 = calling thread)
+    // This gives us the default keyboard layout for this process
+    HKL currentHKL = GetKeyboardLayout(0);
+    LANGID currentLangID = LOWORD(currentHKL);
+    if (currentLangID == LANGID_TraditionalChinese) {
+        // It's a Traditional Chinese IME - assume it's ChangJie
+        return true;
+    }
+
+    // Also check the foreground window's thread keyboard layout
     HWND hwnd = GetForegroundWindow();
     if (hwnd) {
         DWORD threadId = GetWindowThreadProcessId(hwnd, nullptr);
-        HKL currentHKL = GetKeyboardLayout(threadId);
-
-        // Check if this HKL corresponds to a Traditional Chinese IME
-        LANGID currentLangID = LOWORD(currentHKL);
-        if (currentLangID == LANGID_TraditionalChinese) {
-            // It's a Traditional Chinese IME, but we need to verify it's ChangJie
-            // For now, assume any zh-TW IME is ChangJie (since that's the one we're working with)
-            // A more robust check would query the specific IME GUID, but HKL doesn't provide that directly
+        HKL fgHKL = GetKeyboardLayout(threadId);
+        LANGID fgLangID = LOWORD(fgHKL);
+        if (fgLangID == LANGID_TraditionalChinese) {
             return true;
         }
     }
