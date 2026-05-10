@@ -30,8 +30,8 @@ The default GUIDs for the Microsoft ChangJie IME shipped with Windows are:
 
 | Item | GUID |
 |---|---|
-| CLSID | `{A76C93D9-5523-4E90-AAFA-4DB112F9AC76}` |
-| Profile (ChangJie input) | `{B115690A-EA02-48D5-A231-E3578D2FDF80}` |
+| CLSID | `{4BDF9F03-C7D3-11D4-B2AB-0080C882687E}` |
+| Profile (ChangJie input) | `{531FDEBF-9B4C-4A43-A2AA-960E8FCDC732}` |
 | Language | `0x0404` (zh-TW, Traditional Chinese) |
 
 You can verify these on your machine under:

@@ -8,19 +8,30 @@
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
-    CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+    HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+    if (FAILED(hr))
+        return 1;
 
+    int exitCode = 0;
     if (IsChangjieIMEActive()) {
         // Currently on ChangJie — toggle to English (US).
-        ActivateEnglishUS();
+        hr = ActivateEnglishUS();
+        if (FAILED(hr))
+            exitCode = 1;
     } else {
         // Currently on English (US) or any other source — switch to ChangJie
         // and ensure Chinese input mode is active.
-        ActivateChangjieIME();
+        hr = ActivateChangjieIME();
+        if (FAILED(hr)) {
+            CoUninitialize();
+            return 1;
+        }
         Sleep(PROFILE_SWITCH_DELAY_MS); // Allow the foreground app to process the profile switch.
-        SetChineseMode();
+        hr = SetChineseMode();
+        if (FAILED(hr))
+            exitCode = 1;
     }
 
     CoUninitialize();
-    return 0;
+    return exitCode;
 }

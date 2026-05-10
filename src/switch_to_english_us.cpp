@@ -6,11 +6,17 @@
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
-    CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+    HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+    if (FAILED(hr))
+        return 1;
 
-    if (!IsEnglishUSActive())
-        ActivateEnglishUS();
+    int exitCode = 0;
+    if (!IsEnglishUSActive()) {
+        hr = ActivateEnglishUS();
+        if (FAILED(hr))
+            exitCode = 1;
+    }
 
     CoUninitialize();
-    return 0;
+    return exitCode;
 }
