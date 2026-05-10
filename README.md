@@ -24,6 +24,7 @@ Each utility compiles to a single, self-contained EXE with no console window.  T
 
 * **Profile switching** – Uses `ITfInputProcessorProfileMgr::ActivateProfile` (COM, `msctf.dll`) with `TF_IPPMF_FORSESSION` so the change applies session-wide to every window.
 * **Conversion-mode switching** – Uses `ImmGetDefaultIMEWnd` (IMM32, `imm32.dll`) to obtain the foreground window's IME window handle, then sends `WM_IME_CONTROL / IMC_SETCONVERSIONMODE` to it.  This works cross-process.
+* **Active profile detection** – Verifies both TSF profile state and the foreground window's actual keyboard layout (via `GetKeyboardLayout`) to ensure accurate detection and prevent false positives.
 
 ### ChangJie IME GUIDs
 
