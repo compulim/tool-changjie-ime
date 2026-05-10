@@ -247,7 +247,7 @@ void UpdateTrayTooltip()
 
     // Build tooltip with diagnostic info
     wchar_t tooltip[128];
-    swprintf_s(tooltip, L"Changjie Watcher | Conv:0x%08X Sent:0x%08X", convMode, sentMode);
+    swprintf_s(tooltip, 128, L"Changjie Watcher | Conv:0x%08X Sent:0x%08X", convMode, sentMode);
 
     // Update tray icon tooltip
     wcscpy_s(g_nid.szTip, tooltip);
