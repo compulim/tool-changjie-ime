@@ -77,6 +77,7 @@ jobs:
             "build\Release\switch-to-english-us.exe",
             "build\Release\switch-to-changjie-chinese.exe",
             "build\Release\toggle-changjie-english.exe",
+            "build\Release\list-ime-profiles.exe",
             "changjie-ime-tools.zip"
           )
           gh release create $tag `

@@ -81,6 +81,13 @@ add_ime_tool(switch-to-changjie-chinese src/switch_to_changjie_chinese.cpp)
 add_ime_tool(toggle-changjie-english src/toggle_changjie_english.cpp)
 
 # ---------------------------------------------------------------------------
+# Diagnostic tool: list-ime-profiles
+#   Display all available IME profiles in a message box.
+#   Helps users find the correct GUIDs for their system.
+# ---------------------------------------------------------------------------
+add_ime_tool(list-ime-profiles src/list_ime_profiles.cpp)
+
+# ---------------------------------------------------------------------------
 # Installation rules (used by the GitHub Actions packaging step)
 # ---------------------------------------------------------------------------
 install(TARGETS
@@ -90,5 +97,6 @@ install(TARGETS
     switch-to-english-us
     switch-to-changjie-chinese
     toggle-changjie-english
+    list-ime-profiles
     RUNTIME DESTINATION bin
 )
