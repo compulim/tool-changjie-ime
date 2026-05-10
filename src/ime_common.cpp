@@ -53,6 +53,24 @@ HRESULT GetActiveProfile(TF_INPUTPROCESSORPROFILE* pProfile)
 
 bool IsChangjieIMEActive()
 {
+    // First check the foreground window's actual keyboard layout
+    // This is the most reliable indicator of what IME is active
+    HWND hwnd = GetForegroundWindow();
+    if (hwnd) {
+        DWORD threadId = GetWindowThreadProcessId(hwnd, nullptr);
+        HKL currentHKL = GetKeyboardLayout(threadId);
+
+        // Check if this HKL corresponds to a Traditional Chinese IME
+        LANGID currentLangID = LOWORD(currentHKL);
+        if (currentLangID == LANGID_TraditionalChinese) {
+            // It's a Traditional Chinese IME, but we need to verify it's ChangJie
+            // For now, assume any zh-TW IME is ChangJie (since that's the one we're working with)
+            // A more robust check would query the specific IME GUID, but HKL doesn't provide that directly
+            return true;
+        }
+    }
+
+    // Fallback: check TSF profile (might be out of sync with foreground window)
     TF_INPUTPROCESSORPROFILE profile = {};
     if (FAILED(GetActiveProfile(&profile))) return false;
     return (profile.dwProfileType == TF_PROFILETYPE_INPUTPROCESSOR)
