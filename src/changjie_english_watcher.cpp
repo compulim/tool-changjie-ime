@@ -28,10 +28,9 @@
 HINSTANCE g_hInstance = nullptr;
 HWND g_hwndMain = nullptr;
 NOTIFYICONDATAW g_nid = {};
+UINT_PTR g_timerId = 0;
 DWORD g_checkIntervalMs = 1000; // Default: check every 1 second
 HANDLE g_hMutex = nullptr;
-HANDLE g_hThread = nullptr;
-volatile bool g_bRunning = true;
 
 // Forward declarations
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -39,7 +38,7 @@ void CreateTrayIcon(HWND hwnd);
 void RemoveTrayIcon();
 void ShowContextMenu(HWND hwnd);
 void CheckAndSwitchIME();
-DWORD WINAPI WatcherThreadProc(LPVOID lpParam);
+void UpdateTrayTooltip();
 
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int)
@@ -128,10 +127,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int)
     // Create system tray icon
     CreateTrayIcon(g_hwndMain);
 
-    // Start the watcher thread for periodic checking
-    g_hThread = CreateThread(nullptr, 0, WatcherThreadProc, nullptr, 0, nullptr);
-    if (!g_hThread) {
-        MessageBoxW(nullptr, L"Failed to create watcher thread", L"Error", MB_OK | MB_ICONERROR);
+    // Start the timer for periodic checking
+    g_timerId = SetTimer(g_hwndMain, 1, g_checkIntervalMs, nullptr);
+    if (!g_timerId) {
+        MessageBoxW(nullptr, L"Failed to create timer", L"Error", MB_OK | MB_ICONERROR);
         RemoveTrayIcon();
         DestroyWindow(g_hwndMain);
         CoUninitialize();
@@ -149,13 +148,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int)
         DispatchMessage(&msg);
     }
 
-    // Stop the watcher thread
-    g_bRunning = false;
-    if (g_hThread) {
-        WaitForSingleObject(g_hThread, 5000); // Wait up to 5 seconds
-        CloseHandle(g_hThread);
+    // Cleanup
+    if (g_timerId) {
+        KillTimer(g_hwndMain, g_timerId);
     }
-
     RemoveTrayIcon();
     CoUninitialize();
 
@@ -170,6 +166,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int)
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg) {
+        case WM_TIMER:
+            if (wParam == 1) {
+                CheckAndSwitchIME();
+                UpdateTrayTooltip();
+            }
+            return 0;
+
         case WM_TRAYICON:
             if (lParam == WM_RBUTTONUP || lParam == WM_LBUTTONUP) {
                 ShowContextMenu(hwnd);
@@ -236,32 +239,18 @@ void CheckAndSwitchIME()
     }
 }
 
-// Watcher thread that periodically checks IME state
-DWORD WINAPI WatcherThreadProc(LPVOID lpParam)
+void UpdateTrayTooltip()
 {
-    // Initialize COM for this thread using multithreaded apartment
-    // We use MTA instead of STA because this worker thread doesn't pump messages,
-    // and STA requires a message loop for COM marshalling to work properly
-    HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-    if (FAILED(hr)) {
-        return 1;
-    }
+    // Get current conversion mode for debugging
+    DWORD convMode = GetCurrentConversionMode();
+    DWORD sentMode = GetCurrentSentenceMode();
 
-    while (g_bRunning) {
-        // Sleep first, then check (avoid immediate trigger on startup)
-        Sleep(g_checkIntervalMs);
+    // Build tooltip with diagnostic info
+    wchar_t tooltip[128];
+    swprintf_s(tooltip, L"Changjie Watcher | Conv:0x%08X Sent:0x%08X", convMode, sentMode);
 
-        if (!g_bRunning) break;
-
-        // Check and switch if needed (with exception safety)
-        __try {
-            CheckAndSwitchIME();
-        }
-        __except(EXCEPTION_EXECUTE_HANDLER) {
-            // Continue running even if there's an exception
-        }
-    }
-
-    CoUninitialize();
-    return 0;
+    // Update tray icon tooltip
+    wcscpy_s(g_nid.szTip, tooltip);
+    g_nid.uFlags = NIF_TIP;
+    Shell_NotifyIconW(NIM_MODIFY, &g_nid);
 }
