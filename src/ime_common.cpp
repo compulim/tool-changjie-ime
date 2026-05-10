@@ -37,13 +37,9 @@ HRESULT GetActiveProfile(TF_INPUTPROCESSORPROFILE* pProfile)
 {
     if (!pProfile) return E_POINTER;
 
-    // Pump messages to ensure TSF profile changes are processed
-    // This ensures we get fresh profile data after activation changes
-    MSG msg;
-    while (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE)) {
-        TranslateMessage(&msg);
-        DispatchMessageW(&msg);
-    }
+    // Brief sleep to allow TSF profile changes to propagate
+    // TSF profile changes are asynchronous and may take a moment to update
+    Sleep(10);
 
     ITfInputProcessorProfileMgr* pProfileMgr = nullptr;
     HRESULT hr = CoCreateInstance(
