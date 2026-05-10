@@ -7,9 +7,6 @@
 #include "ime_common.h"
 #include <sstream>
 #include <iomanip>
-#include <inputscope.h>
-
-#pragma comment(lib, "uuid.lib")
 
 // TSF Compartment GUIDs for conversion mode
 static const GUID GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION =
@@ -102,103 +99,6 @@ DWORD GetTSFCompartmentValue(const GUID& compartmentGuid, bool* success = nullpt
 
     if (success) *success = true;
     return value;
-}
-
-// Helper to get input scope information from the focused element
-std::wstring GetInputScopeInfo()
-{
-    std::wstringstream ss;
-
-    ITfThreadMgr* pThreadMgr = nullptr;
-    HRESULT hr = CoCreateInstance(CLSID_TF_ThreadMgr, nullptr,
-                                  CLSCTX_INPROC_SERVER,
-                                  IID_ITfThreadMgr,
-                                  reinterpret_cast<void**>(&pThreadMgr));
-    if (FAILED(hr)) {
-        ss << L"Failed to get ITfThreadMgr";
-        return ss.str();
-    }
-
-    ITfDocumentMgr* pDocMgr = nullptr;
-    hr = pThreadMgr->GetFocus(&pDocMgr);
-    if (FAILED(hr) || !pDocMgr) {
-        pThreadMgr->Release();
-        ss << L"No focused document";
-        return ss.str();
-    }
-
-    ITfContext* pContext = nullptr;
-    hr = pDocMgr->GetTop(&pContext);
-    pDocMgr->Release();
-    pThreadMgr->Release();
-
-    if (FAILED(hr) || !pContext) {
-        ss << L"No context";
-        return ss.str();
-    }
-
-    // Try to get ITfContextOwner to access input scope
-    ITfContextOwner* pContextOwner = nullptr;
-    hr = pContext->QueryInterface(IID_ITfContextOwner,
-                                  reinterpret_cast<void**>(&pContextOwner));
-    pContext->Release();
-
-    if (FAILED(hr) || !pContextOwner) {
-        ss << L"No context owner (input scope not available)";
-        return ss.str();
-    }
-
-    IUnknown* pUnk = nullptr;
-    hr = pContextOwner->GetAttribute(GUID_PROP_INPUTSCOPE, &pUnk);
-    pContextOwner->Release();
-
-    if (FAILED(hr) || !pUnk) {
-        ss << L"No input scope attribute";
-        return ss.str();
-    }
-
-    ITfInputScope* pInputScope = nullptr;
-    hr = pUnk->QueryInterface(IID_ITfInputScope,
-                             reinterpret_cast<void**>(&pInputScope));
-    pUnk->Release();
-
-    if (FAILED(hr) || !pInputScope) {
-        ss << L"Failed to get ITfInputScope";
-        return ss.str();
-    }
-
-    InputScope* pScopes = nullptr;
-    UINT count = 0;
-    hr = pInputScope->GetInputScopes(&pScopes, &count);
-    pInputScope->Release();
-
-    if (FAILED(hr) || count == 0) {
-        ss << L"No input scopes";
-        return ss.str();
-    }
-
-    for (UINT i = 0; i < count; i++) {
-        if (i > 0) ss << L", ";
-        switch (pScopes[i]) {
-            case IS_DEFAULT: ss << L"DEFAULT"; break;
-            case IS_URL: ss << L"URL"; break;
-            case IS_FILE_FULLFILEPATH: ss << L"FILE_PATH"; break;
-            case IS_FILE_FILENAME: ss << L"FILENAME"; break;
-            case IS_EMAIL_USERNAME: ss << L"EMAIL_USERNAME"; break;
-            case IS_EMAIL_SMTPEMAILADDRESS: ss << L"EMAIL"; break;
-            case IS_LOGINNAME: ss << L"LOGIN"; break;
-            case IS_PERSONALNAME_FULLNAME: ss << L"NAME"; break;
-            case IS_NUMBER: ss << L"NUMBER"; break;
-            case IS_PASSWORD: ss << L"PASSWORD"; break;
-            case IS_TELEPHONE_FULLTELEPHONENUMBER: ss << L"PHONE"; break;
-            case IS_ALPHANUMERIC_FULLWIDTH: ss << L"ALPHANUMERIC_FULLWIDTH"; break;
-            case IS_ALPHANUMERIC_HALFWIDTH: ss << L"ALPHANUMERIC_HALFWIDTH"; break;
-            default: ss << L"UNKNOWN(" << pScopes[i] << L")"; break;
-        }
-    }
-
-    CoTaskMemFree(pScopes);
-    return ss.str();
 }
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
@@ -305,9 +205,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         output << L"(failed to read)\n";
     }
     output << L"\n";
-
-    // Get input scope (to detect forced-English mode)
-    output << L"Input Scope (Field Type): " << GetInputScopeInfo() << L"\n\n";
 
     // Get IME window info
     if (hwndForeground) {
