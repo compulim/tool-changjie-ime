@@ -54,40 +54,6 @@ std::wstring DecodeConversionMode(DWORD mode)
     return ss.str();
 }
 
-// Get conversion mode using ImmGetConversionStatus (different API)
-DWORD GetConversionModeViaImmContext()
-{
-    HWND hwnd = GetForegroundWindow();
-    if (!hwnd) return static_cast<DWORD>(-1);
-
-    HIMC himc = ImmGetContext(hwnd);
-    if (!himc) return static_cast<DWORD>(-1);
-
-    DWORD conversionMode = 0;
-    DWORD sentenceMode = 0;
-    BOOL result = ImmGetConversionStatus(himc, &conversionMode, &sentenceMode);
-
-    ImmReleaseContext(hwnd, himc);
-
-    return result ? conversionMode : static_cast<DWORD>(-1);
-}
-
-// Get open status via ImmGetOpenStatus
-BOOL GetImeOpenStatus()
-{
-    HWND hwnd = GetForegroundWindow();
-    if (!hwnd) return FALSE;
-
-    HIMC himc = ImmGetContext(hwnd);
-    if (!himc) return FALSE;
-
-    BOOL isOpen = ImmGetOpenStatus(himc);
-
-    ImmReleaseContext(hwnd, himc);
-
-    return isOpen;
-}
-
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
     HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
