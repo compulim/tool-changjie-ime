@@ -95,6 +95,15 @@ add_ime_tool(list-ime-profiles src/list_ime_profiles.cpp)
 add_ime_tool(ime-mode-diagnostics src/ime_mode_diagnostics.cpp)
 
 # ---------------------------------------------------------------------------
+# Tool 7: changjie-english-watcher
+#   System tray application that watches for Changjie English mode and
+#   automatically switches to English US. Stays in system tray and can be
+#   closed via context menu. Check interval is configurable via argument.
+# ---------------------------------------------------------------------------
+add_executable(changjie-english-watcher WIN32 src/changjie_english_watcher.cpp)
+target_link_libraries(changjie-english-watcher PRIVATE ime_common shell32)
+
+# ---------------------------------------------------------------------------
 # Installation rules (used by the GitHub Actions packaging step)
 # ---------------------------------------------------------------------------
 install(TARGETS
@@ -106,5 +115,6 @@ install(TARGETS
     toggle-changjie-english
     list-ime-profiles
     ime-mode-diagnostics
+    changjie-english-watcher
     RUNTIME DESTINATION bin
 )

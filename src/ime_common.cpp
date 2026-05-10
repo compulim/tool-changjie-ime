@@ -106,6 +106,28 @@ bool IsChangjieChineseModeActive()
     return (mode & IME_CMODE_NATIVE) != 0;
 }
 
+bool IsChangjieEnglishModeActive()
+{
+    if (!IsChangjieIMEActive()) return false;
+
+    // When the IME is not open, it's in English mode
+    BOOL imeOpen = GetImeOpenStatus();
+    if (!imeOpen) return true;
+
+    // Try to get conversion mode via WM_IME_CONTROL first (primary method)
+    DWORD mode = GetCurrentConversionMode();
+
+    // If that fails or returns an unexpected value, try the fallback method
+    if (mode == static_cast<DWORD>(-1) || mode == 0) {
+        mode = GetConversionModeViaImmContext();
+    }
+
+    if (mode == static_cast<DWORD>(-1)) return false;
+
+    // Check if IME_CMODE_NATIVE is NOT set (indicates English/alphanumeric mode)
+    return (mode & IME_CMODE_NATIVE) == 0;
+}
+
 // ---------------------------------------------------------------------------
 // Profile activation
 // ---------------------------------------------------------------------------

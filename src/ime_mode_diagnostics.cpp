@@ -156,6 +156,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         if (himc) {
             output << L"0x" << std::hex << std::setw(8) << std::setfill(L'0')
                    << reinterpret_cast<UINT_PTR>(himc) << std::dec << L"\n";
+
+            // Get additional raw context information
+            if (himc) {
+                DWORD convMode = 0, sentMode = 0;
+                if (ImmGetConversionStatus(himc, &convMode, &sentMode)) {
+                    output << L"  Raw Conversion Mode: " << DwordToHex(convMode) << L"\n";
+                    output << L"  Raw Sentence Mode: " << DwordToHex(sentMode) << L"\n";
+                }
+            }
+
             ImmReleaseContext(hwndForeground, himc);
         } else {
             output << L"NULL\n";
@@ -191,6 +201,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     output << L"  IsChangjieIMEActive(): " << (IsChangjieIMEActive() ? L"TRUE" : L"FALSE") << L"\n";
     output << L"  IsEnglishUSActive(): " << (IsEnglishUSActive() ? L"TRUE" : L"FALSE") << L"\n";
     output << L"  IsChangjieChineseModeActive(): " << (IsChangjieChineseModeActive() ? L"TRUE" : L"FALSE") << L"\n";
+    output << L"  IsChangjieEnglishModeActive(): " << (IsChangjieEnglishModeActive() ? L"TRUE" : L"FALSE") << L"\n";
 
     CoUninitialize();
 
