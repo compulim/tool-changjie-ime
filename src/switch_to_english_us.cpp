@@ -15,6 +15,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         hr = ActivateEnglishUS();
         if (FAILED(hr))
             exitCode = 1;
+        // Brief delay to allow the profile switch to complete.
+        Sleep(PROFILE_SWITCH_DELAY_MS);
     }
 
     CoUninitialize();
