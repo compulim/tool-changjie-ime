@@ -113,6 +113,9 @@ HRESULT ActivateEnglishUS()
         hklEnUS = reinterpret_cast<HKL>(static_cast<ULONG_PTR>(0x04090409));
     }
 
+    // Also use ActivateKeyboardLayout to ensure the layout is activated for the current thread.
+    ActivateKeyboardLayout(hklEnUS, KLF_SETFORPROCESS);
+
     ITfInputProcessorProfileMgr* pProfileMgr = nullptr;
     HRESULT hr = CoCreateInstance(
         CLSID_TF_InputProcessorProfiles,
