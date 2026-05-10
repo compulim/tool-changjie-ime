@@ -143,6 +143,62 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     }
     output << L"\n";
 
+    // Language Bar Information
+    output << L"Language Bar Information:\n";
+    ITfLangBarItemMgr* pLangBarItemMgr = nullptr;
+    hr = CoCreateInstance(CLSID_TF_LangBarItemMgr, nullptr, CLSCTX_INPROC_SERVER,
+                          IID_ITfLangBarItemMgr, reinterpret_cast<void**>(&pLangBarItemMgr));
+    if (SUCCEEDED(hr) && pLangBarItemMgr) {
+        IEnumTfLangBarItems* pEnum = nullptr;
+        hr = pLangBarItemMgr->EnumItems(&pEnum);
+        if (SUCCEEDED(hr) && pEnum) {
+            ITfLangBarItem* pItem = nullptr;
+            ULONG fetched = 0;
+            int itemCount = 0;
+
+            while (pEnum->Next(1, &pItem, &fetched) == S_OK && fetched > 0) {
+                TF_LANGBARITEMINFO itemInfo = {};
+                if (SUCCEEDED(pItem->GetInfo(&itemInfo))) {
+                    // Get tooltip text
+                    BSTR tooltip = nullptr;
+                    if (SUCCEEDED(pItem->GetTooltipString(&tooltip)) && tooltip) {
+                        output << L"  Item " << itemCount << L": " << tooltip << L"\n";
+
+                        // Try to get the icon text/description
+                        ITfLangBarItemButton* pButton = nullptr;
+                        if (SUCCEEDED(pItem->QueryInterface(IID_ITfLangBarItemButton,
+                                                           reinterpret_cast<void**>(&pButton)))) {
+                            BSTR text = nullptr;
+                            if (SUCCEEDED(pButton->GetText(&text)) && text) {
+                                output << L"    Text: " << text << L"\n";
+                                SysFreeString(text);
+                            }
+                            pButton->Release();
+                        }
+
+                        SysFreeString(tooltip);
+                        itemCount++;
+                    }
+                }
+                pItem->Release();
+            }
+
+            if (itemCount == 0) {
+                output << L"  No language bar items found\n";
+            }
+
+            pEnum->Release();
+        } else {
+            output << L"  ERROR: Failed to enumerate items (HRESULT: 0x"
+                   << std::hex << hr << std::dec << L")\n";
+        }
+        pLangBarItemMgr->Release();
+    } else {
+        output << L"  ERROR: Failed to create ITfLangBarItemMgr (HRESULT: 0x"
+               << std::hex << hr << std::dec << L")\n";
+    }
+    output << L"\n";
+
     // Detection results
     output << L"Detection:\n";
     output << L"  Changjie Active:   " << (IsChangjieIMEActive() ? L"YES" : L"NO") << L"\n";
