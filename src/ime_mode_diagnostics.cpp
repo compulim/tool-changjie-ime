@@ -158,34 +158,35 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
                    << reinterpret_cast<UINT_PTR>(himc) << std::dec << L"\n";
 
             // Get additional raw context information
-            if (himc) {
-                DWORD convMode = 0, sentMode = 0;
-                if (ImmGetConversionStatus(himc, &convMode, &sentMode)) {
-                    output << L"  Raw Conversion Mode: " << DwordToHex(convMode) << L"\n";
-                    output << L"  Raw Sentence Mode: " << DwordToHex(sentMode) << L"\n";
-                }
+            DWORD convMode = 0, sentMode = 0;
+            if (ImmGetConversionStatus(himc, &convMode, &sentMode)) {
+                output << L"  Raw Conversion Mode (via ImmGetConversionStatus): " << DwordToHex(convMode) << L"\n";
+                output << L"  Raw Sentence Mode (via ImmGetConversionStatus): " << DwordToHex(sentMode) << L"\n";
+            } else {
+                output << L"  ImmGetConversionStatus failed\n";
             }
 
             ImmReleaseContext(hwndForeground, himc);
         } else {
-            output << L"NULL\n";
+            output << L"NULL (ImmGetContext not available - this is normal for modern TSF-based IMEs)\n";
         }
         output << L"\n";
     }
 
     // Get IME open status
     BOOL imeOpen = GetImeOpenStatus();
-    output << L"IME Open Status (ImmGetOpenStatus): " << (imeOpen ? L"OPEN" : L"CLOSED") << L"\n\n";
+    output << L"IME Open Status (ImmGetOpenStatus): " << (imeOpen ? L"OPEN" : L"CLOSED");
+    output << L" (unreliable for TSF-based IMEs)\n\n";
 
     // Get conversion mode via WM_IME_CONTROL
     DWORD mode1 = GetCurrentConversionMode();
-    output << L"Conversion Mode (WM_IME_CONTROL):\n";
+    output << L"Conversion Mode (WM_IME_CONTROL - Primary Method):\n";
     output << L"  " << DecodeConversionMode(mode1);
     output << L"\n";
 
     // Get conversion mode via ImmGetConversionStatus
     DWORD mode2 = GetConversionModeViaImmContext();
-    output << L"Conversion Mode (ImmGetConversionStatus):\n";
+    output << L"Conversion Mode (ImmGetConversionStatus - Fallback, often fails on TSF IMEs):\n";
     output << L"  " << DecodeConversionMode(mode2);
     output << L"\n";
 
@@ -194,6 +195,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         output << L"Both methods agree.\n\n";
     } else if (mode1 != static_cast<DWORD>(-1) && mode2 != static_cast<DWORD>(-1)) {
         output << L"WARNING: Methods disagree!\n\n";
+    } else if (mode1 != static_cast<DWORD>(-1) && mode2 == static_cast<DWORD>(-1)) {
+        output << L"WM_IME_CONTROL works, ImmGetConversionStatus failed (expected for TSF IMEs).\n\n";
+    } else {
+        output << L"Both methods failed.\n\n";
     }
 
     // High-level detection results
