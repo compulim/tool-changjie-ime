@@ -250,16 +250,19 @@ void UpdateTrayTooltip()
     // Get current conversion mode for debugging
     DWORD convMode = GetCurrentConversionMode();
     DWORD sentMode = GetCurrentSentenceMode();
+    const bool changjieActive = IsChangjieIMEActive();
 
     // Build tooltip with diagnostic info including last timer tick and last switch
-    wchar_t tooltip[128];
-    if (g_lastSwitchTick > 0) {
-        swprintf_s(tooltip, 128, L"Changjie Watcher | Conv:0x%08X Sent:0x%08X | Last:%u Switch:%u",
-                   convMode, sentMode, g_lastTimerTick, g_lastSwitchTick);
-    } else {
-        swprintf_s(tooltip, 128, L"Changjie Watcher | Conv:0x%08X Sent:0x%08X | Last:%u",
-                   convMode, sentMode, g_lastTimerTick);
-    }
+    wchar_t tooltip[_countof(g_nid.szTip)];
+    swprintf_s(
+        tooltip,
+        _countof(tooltip),
+        L"Changjie Watcher | A:%d C:0x%08X S:0x%08X | L:%u Sw:%u",
+        changjieActive ? 1 : 0,
+        convMode,
+        sentMode,
+        g_lastTimerTick,
+        g_lastSwitchTick);
 
     // Update tray icon tooltip
     wcscpy_s(g_nid.szTip, tooltip);
