@@ -9,12 +9,6 @@
 #include <iomanip>
 #include <ctfutb.h>
 
-// Link msctf for TSF language bar APIs, but only on x64 where the lib is available
-// On ARM64, the functions are delay-loaded from msctf.dll
-#if defined(_M_X64) || defined(_M_IX86)
-#pragma comment(lib, "msctf.lib")
-#endif
-
 // Helper to convert GUID to string
 std::wstring GuidToString(const GUID& guid)
 {
@@ -136,12 +130,35 @@ void EnumerateLangBarItems(std::wstringstream& output)
     output << L"Language Bar Items (via TF_CreateLangBarItemMgr):\n";
     output << L"================================================\n\n";
 
+    // Dynamically load TF_CreateLangBarItemMgr from msctf.dll
+    // This avoids static linking issues on ARM64 where msctf.lib is not available
+    HMODULE hMsctf = LoadLibraryW(L"msctf.dll");
+    if (!hMsctf) {
+        output << L"  Failed to load msctf.dll (Error: " << GetLastError() << L")\n\n";
+        return;
+    }
+
+    // Define function pointer type for TF_CreateLangBarItemMgr
+    typedef HRESULT (WINAPI *PFN_TF_CreateLangBarItemMgr)(ITfLangBarItemMgr**);
+
+    PFN_TF_CreateLangBarItemMgr pfnCreateLangBarItemMgr =
+        reinterpret_cast<PFN_TF_CreateLangBarItemMgr>(
+            GetProcAddress(hMsctf, "TF_CreateLangBarItemMgr"));
+
+    if (!pfnCreateLangBarItemMgr) {
+        output << L"  Failed to get TF_CreateLangBarItemMgr from msctf.dll (Error: "
+               << GetLastError() << L")\n\n";
+        FreeLibrary(hMsctf);
+        return;
+    }
+
     ITfLangBarItemMgr* pLangBarItemMgr = nullptr;
-    HRESULT hr = TF_CreateLangBarItemMgr(&pLangBarItemMgr);
+    HRESULT hr = pfnCreateLangBarItemMgr(&pLangBarItemMgr);
 
     if (FAILED(hr) || !pLangBarItemMgr) {
         output << L"  Failed to create ITfLangBarItemMgr (HRESULT: 0x"
                << std::hex << hr << std::dec << L")\n\n";
+        FreeLibrary(hMsctf);
         return;
     }
 
@@ -152,6 +169,7 @@ void EnumerateLangBarItems(std::wstringstream& output)
         output << L"  Failed to enumerate items (HRESULT: 0x"
                << std::hex << hr << std::dec << L")\n\n";
         pLangBarItemMgr->Release();
+        FreeLibrary(hMsctf);
         return;
     }
 
@@ -244,6 +262,7 @@ void EnumerateLangBarItems(std::wstringstream& output)
 
     pEnum->Release();
     pLangBarItemMgr->Release();
+    FreeLibrary(hMsctf);
 }
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
