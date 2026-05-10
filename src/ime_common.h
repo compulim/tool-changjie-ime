@@ -1,0 +1,92 @@
+#pragma once
+
+// Require Windows 10 or later for full TSF support
+#ifndef WINVER
+#define WINVER 0x0A00
+#endif
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0A00
+#endif
+
+#define WIN32_LEAN_AND_MEAN
+#define UNICODE
+#define _UNICODE
+
+#include <windows.h>
+#include <msctf.h>
+#include <imm.h>
+
+#pragma comment(lib, "ole32.lib")
+#pragma comment(lib, "oleaut32.lib")
+#pragma comment(lib, "imm32.lib")
+
+// ---------------------------------------------------------------------------
+// Microsoft ChangJie IME (Traditional Chinese, zh-TW) GUIDs
+//
+// These GUIDs identify the Microsoft ChangJie (倉頡) input method installed
+// as part of the Windows Traditional Chinese language pack.
+//
+// To look them up on your machine:
+//   HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\CTF\TIP\{CLSID}
+//     \LanguageProfile\{langid}\{ProfileGUID}
+//
+// CLSID: {A76C93D9-5523-4E90-AAFA-4DB112F9AC76}
+// Profile GUID (ChangJie): {B115690A-EA02-48D5-A231-E3578D2FDF80}
+// ---------------------------------------------------------------------------
+extern const CLSID CLSID_ChangjieIME;
+extern const GUID  GUID_ChangjieProfile;
+
+static const LANGID LANGID_TraditionalChinese = 0x0404; // zh-TW
+static const LANGID LANGID_EnglishUS          = 0x0409; // en-US
+
+// Windows keyboard layout identifier string for the US English keyboard.
+// Used with LoadKeyboardLayoutW(); defined in the system registry under
+// HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Keyboard Layouts.
+static const wchar_t* LAYOUT_ID_ENUS = L"00000409";
+
+// Milliseconds to wait after requesting a TSF profile switch before sending
+// WM_IME_CONTROL to the foreground window.  The profile switch is
+// asynchronous; the brief delay lets the target application process the
+// WM_INPUTLANGCHANGE notification before we set the conversion mode.
+static const DWORD PROFILE_SWITCH_DELAY_MS = 50;
+
+// ---------------------------------------------------------------------------
+// Profile queries (use ITfInputProcessorProfileMgr via COM)
+// ---------------------------------------------------------------------------
+
+// Fill *pProfile with the currently active input processor profile.
+HRESULT GetActiveProfile(TF_INPUTPROCESSORPROFILE* pProfile);
+
+// Return true if the Microsoft ChangJie IME is the active input processor.
+bool IsChangjieIMEActive();
+
+// Return true if an English (US) keyboard layout is the active input source.
+bool IsEnglishUSActive();
+
+// ---------------------------------------------------------------------------
+// Profile activation (use ITfInputProcessorProfileMgr via COM)
+// ---------------------------------------------------------------------------
+
+// Activate the Microsoft ChangJie IME session-wide.
+HRESULT ActivateChangjieIME();
+
+// Activate the English (US) keyboard layout session-wide.
+HRESULT ActivateEnglishUS();
+
+// ---------------------------------------------------------------------------
+// Conversion-mode helpers (use IMM32 DLL via ImmGetDefaultIMEWnd /
+//   WM_IME_CONTROL messages sent to the foreground window's IME window)
+// ---------------------------------------------------------------------------
+
+// Return the foreground window's current IME conversion mode flags,
+// or (DWORD)-1 on failure.
+DWORD GetCurrentConversionMode();
+
+// Set the foreground window's IME conversion mode to |mode|.
+HRESULT SetConversionMode(DWORD mode);
+
+// Ensure IME_CMODE_NATIVE is set (Chinese character input).
+HRESULT SetChineseMode();
+
+// Ensure IME_CMODE_NATIVE is cleared (alphanumeric / English input).
+HRESULT SetEnglishMode();
