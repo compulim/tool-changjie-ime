@@ -104,6 +104,13 @@ std::wstring GetInterfaceTypeName(IUnknown* pUnk)
         pSystemSink->Release();
     }
 
+    ITfSystemLangBarItemText* pSystemText = nullptr;
+    if (SUCCEEDED(pUnk->QueryInterface(IID_ITfSystemLangBarItemText, (void**)&pSystemText))) {
+        if (ss.tellp() > 0) ss << L", ";
+        ss << L"ITfSystemLangBarItemText";
+        pSystemText->Release();
+    }
+
     // Base interface - always test last
     ITfLangBarItem* pItem = nullptr;
     if (SUCCEEDED(pUnk->QueryInterface(IID_ITfLangBarItem, (void**)&pItem))) {
@@ -212,6 +219,17 @@ void EnumerateLangBarItems(std::wstringstream& output)
                 SysFreeString(text);
             }
             pBitmapButton->Release();
+        }
+
+        // Try to get system lang bar item text
+        ITfSystemLangBarItemText* pSystemText = nullptr;
+        if (SUCCEEDED(pItem->QueryInterface(IID_ITfSystemLangBarItemText, (void**)&pSystemText))) {
+            BSTR itemText = nullptr;
+            if (SUCCEEDED(pSystemText->GetItemText(&itemText)) && itemText) {
+                output << L"  System Item Text: " << itemText << L"\n";
+                SysFreeString(itemText);
+            }
+            pSystemText->Release();
         }
 
         output << L"\n";
