@@ -134,14 +134,48 @@ void ShowTrayMenu(HWND hwnd)
     DestroyMenu(hMenu);
 }
 
+// Update tooltip with debug information
+void UpdateTooltip(const wchar_t* text)
+{
+    g_nid.uFlags = NIF_TIP;
+    StringCchCopyW(g_nid.szTip, ARRAYSIZE(g_nid.szTip), text);
+    Shell_NotifyIconW(NIM_MODIFY, &g_nid);
+}
+
 // Timer callback - checks ChangJie IME state
 void OnTimer(HWND hwnd)
 {
+    SYSTEMTIME st;
+    GetLocalTime(&st);
+
+    wchar_t timerFireTime[64];
+    StringCchPrintfW(timerFireTime, ARRAYSIZE(timerFireTime),
+                     L"%02d:%02d:%02d.%03d", st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
+
     // Check if ChangJie IME is in English mode
-    if (IsChangjieEnglishModeActive()) {
+    bool isEnglishMode = IsChangjieEnglishModeActive();
+
+    wchar_t tooltip[256];
+    if (isEnglishMode) {
+        // Get time before switching
+        GetLocalTime(&st);
+        wchar_t switchTime[64];
+        StringCchPrintfW(switchTime, ARRAYSIZE(switchTime),
+                         L"%02d:%02d:%02d.%03d", st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
+
         // Switch to English US keyboard
         ActivateEnglishUS();
+
+        StringCchPrintfW(tooltip, ARRAYSIZE(tooltip),
+                         L"Timer: %s\nEnglish Mode: YES\nSwitched: %s",
+                         timerFireTime, switchTime);
+    } else {
+        StringCchPrintfW(tooltip, ARRAYSIZE(tooltip),
+                         L"Timer: %s\nEnglish Mode: NO",
+                         timerFireTime);
     }
+
+    UpdateTooltip(tooltip);
 }
 
 // Window procedure
