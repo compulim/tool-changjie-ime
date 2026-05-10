@@ -17,6 +17,7 @@
 
 #include "ime_common.h"
 #include <shellapi.h>
+#include <stdio.h>
 
 // Define the system tray icon ID and messages
 #define WM_TRAYICON (WM_USER + 1)
