@@ -201,10 +201,9 @@ HRESULT ActivateEnglishUS()
         // Post the message asynchronously to avoid blocking
         PostMessageW(hwndForeground, WM_INPUTLANGCHANGEREQUEST, 0, reinterpret_cast<LPARAM>(hklEnUS));
     } else {
-        // When no foreground window (e.g., desktop has focus), use ActivateKeyboardLayout
-        // to directly activate the keyboard layout for the current thread
-        // KLF_SETFORPROCESS flag makes it apply to the entire process
-        ActivateKeyboardLayout(hklEnUS, KLF_SETFORPROCESS);
+        // When no foreground window (e.g., desktop has focus), broadcast the message
+        // This ensures all windows receive the language change request
+        PostMessageW(HWND_BROADCAST, WM_INPUTLANGCHANGEREQUEST, 0, reinterpret_cast<LPARAM>(hklEnUS));
     }
 
     return hr;
