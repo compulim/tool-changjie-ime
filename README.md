@@ -34,6 +34,8 @@ The default GUIDs for the Microsoft ChangJie IME shipped with Windows are:
 | Profile (ChangJie input) | `{531FDEBF-9B4C-4A43-A2AA-960E8FCDC732}` |
 | Language | `0x0404` (zh-TW, Traditional Chinese) |
 
+**Note:** These GUIDs may vary between Windows versions and system configurations. If the tools are not working (returning immediately without effect), the GUIDs may be incorrect for your system.
+
 You can verify these on your machine under:
 ```
 HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\CTF\TIP\{CLSID}\LanguageProfile\{langid}\{ProfileGUID}
