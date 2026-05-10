@@ -28,33 +28,6 @@ std::wstring DwordToHex(DWORD value)
     return buffer;
 }
 
-// Helper to decode conversion mode flags
-std::wstring DecodeConversionMode(DWORD mode)
-{
-    if (mode == static_cast<DWORD>(-1)) {
-        return L"(failed to get mode)";
-    }
-
-    std::wstringstream ss;
-    ss << DwordToHex(mode) << L"\n";
-
-    if (mode & IME_CMODE_ALPHANUMERIC) ss << L"        ALPHANUMERIC\n";
-    if (mode & IME_CMODE_NATIVE) ss << L"        NATIVE (Chinese)\n";
-    if (mode & IME_CMODE_KATAKANA) ss << L"        KATAKANA\n";
-    if (mode & IME_CMODE_LANGUAGE) ss << L"        LANGUAGE\n";
-    if (mode & IME_CMODE_FULLSHAPE) ss << L"        FULLSHAPE\n";
-    if (mode & IME_CMODE_ROMAN) ss << L"        ROMAN\n";
-    if (mode & IME_CMODE_CHARCODE) ss << L"        CHARCODE\n";
-    if (mode & IME_CMODE_HANJACONVERT) ss << L"        HANJACONVERT\n";
-    if (mode & IME_CMODE_SOFTKBD) ss << L"        SOFTKBD\n";
-    if (mode & IME_CMODE_NOCONVERSION) ss << L"        NOCONVERSION\n";
-    if (mode & IME_CMODE_EUDC) ss << L"        EUDC\n";
-    if (mode & IME_CMODE_SYMBOL) ss << L"        SYMBOL\n";
-    if (mode & IME_CMODE_FIXED) ss << L"        FIXED\n";
-
-    return ss.str();
-}
-
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
     HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
@@ -182,13 +155,59 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // Get conversion mode via WM_IME_CONTROL
     DWORD mode1 = GetCurrentConversionMode();
     output << L"Conversion Mode (WM_IME_CONTROL - Primary Method):\n";
-    output << L"  " << DecodeConversionMode(mode1);
+    output << L"  Raw value (IMC_GETCONVERSIONMODE): " << DwordToHex(mode1) << L"\n";
+    if (mode1 != static_cast<DWORD>(-1)) {
+        output << L"  Flags:\n";
+        if (mode1 == 0) {
+            output << L"        (none - alphanumeric mode)\n";
+        } else {
+            if (mode1 & IME_CMODE_ALPHANUMERIC) output << L"        ALPHANUMERIC\n";
+            if (mode1 & IME_CMODE_NATIVE) output << L"        NATIVE (Chinese)\n";
+            if (mode1 & IME_CMODE_KATAKANA) output << L"        KATAKANA\n";
+            if (mode1 & IME_CMODE_LANGUAGE) output << L"        LANGUAGE\n";
+            if (mode1 & IME_CMODE_FULLSHAPE) output << L"        FULLSHAPE\n";
+            if (mode1 & IME_CMODE_ROMAN) output << L"        ROMAN\n";
+            if (mode1 & IME_CMODE_CHARCODE) output << L"        CHARCODE\n";
+            if (mode1 & IME_CMODE_HANJACONVERT) output << L"        HANJACONVERT\n";
+            if (mode1 & IME_CMODE_SOFTKBD) output << L"        SOFTKBD\n";
+            if (mode1 & IME_CMODE_NOCONVERSION) output << L"        NOCONVERSION\n";
+            if (mode1 & IME_CMODE_EUDC) output << L"        EUDC\n";
+            if (mode1 & IME_CMODE_SYMBOL) output << L"        SYMBOL\n";
+            if (mode1 & IME_CMODE_FIXED) output << L"        FIXED\n";
+        }
+    }
+    output << L"\n";
+
+    // Get sentence mode via WM_IME_CONTROL
+    DWORD sentMode1 = GetCurrentSentenceMode();
+    output << L"Sentence Mode (WM_IME_CONTROL):\n";
+    output << L"  Raw value (IMC_GETSENTENCEMODE): " << DwordToHex(sentMode1) << L"\n";
     output << L"\n";
 
     // Get conversion mode via ImmGetConversionStatus
     DWORD mode2 = GetConversionModeViaImmContext();
     output << L"Conversion Mode (ImmGetConversionStatus - Fallback, often fails on TSF IMEs):\n";
-    output << L"  " << DecodeConversionMode(mode2);
+    output << L"  Raw value: " << DwordToHex(mode2) << L"\n";
+    if (mode2 != static_cast<DWORD>(-1)) {
+        output << L"  Flags:\n";
+        if (mode2 == 0) {
+            output << L"        (none - alphanumeric mode)\n";
+        } else {
+            if (mode2 & IME_CMODE_ALPHANUMERIC) output << L"        ALPHANUMERIC\n";
+            if (mode2 & IME_CMODE_NATIVE) output << L"        NATIVE (Chinese)\n";
+            if (mode2 & IME_CMODE_KATAKANA) output << L"        KATAKANA\n";
+            if (mode2 & IME_CMODE_LANGUAGE) output << L"        LANGUAGE\n";
+            if (mode2 & IME_CMODE_FULLSHAPE) output << L"        FULLSHAPE\n";
+            if (mode2 & IME_CMODE_ROMAN) output << L"        ROMAN\n";
+            if (mode2 & IME_CMODE_CHARCODE) output << L"        CHARCODE\n";
+            if (mode2 & IME_CMODE_HANJACONVERT) output << L"        HANJACONVERT\n";
+            if (mode2 & IME_CMODE_SOFTKBD) output << L"        SOFTKBD\n";
+            if (mode2 & IME_CMODE_NOCONVERSION) output << L"        NOCONVERSION\n";
+            if (mode2 & IME_CMODE_EUDC) output << L"        EUDC\n";
+            if (mode2 & IME_CMODE_SYMBOL) output << L"        SYMBOL\n";
+            if (mode2 & IME_CMODE_FIXED) output << L"        FIXED\n";
+        }
+    }
     output << L"\n";
 
     // Comparison

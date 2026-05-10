@@ -19,6 +19,9 @@
 #ifndef IMC_SETCONVERSIONMODE
 #define IMC_SETCONVERSIONMODE 2
 #endif
+#ifndef IMC_GETSENTENCEMODE
+#define IMC_GETSENTENCEMODE 3
+#endif
 
 #pragma comment(lib, "ole32.lib")
 #pragma comment(lib, "oleaut32.lib")
@@ -101,6 +104,10 @@ HRESULT ActivateEnglishUS();
 // Return the foreground window's current IME conversion mode flags,
 // or (DWORD)-1 on failure.
 DWORD GetCurrentConversionMode();
+
+// Return the foreground window's current IME sentence mode flags,
+// or (DWORD)-1 on failure.
+DWORD GetCurrentSentenceMode();
 
 // Set the foreground window's IME conversion mode to |mode|.
 HRESULT SetConversionMode(DWORD mode);

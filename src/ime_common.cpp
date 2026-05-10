@@ -210,6 +210,18 @@ DWORD GetCurrentConversionMode()
     return static_cast<DWORD>(mode);
 }
 
+DWORD GetCurrentSentenceMode()
+{
+    HWND hwnd = GetForegroundWindow();
+    if (!hwnd) return static_cast<DWORD>(-1);
+
+    HWND imeWnd = ImmGetDefaultIMEWnd(hwnd);
+    if (!imeWnd) return static_cast<DWORD>(-1);
+
+    LRESULT mode = SendMessage(imeWnd, WM_IME_CONTROL, IMC_GETSENTENCEMODE, 0);
+    return static_cast<DWORD>(mode);
+}
+
 DWORD GetConversionModeViaImmContext()
 {
     HWND hwnd = GetForegroundWindow();
