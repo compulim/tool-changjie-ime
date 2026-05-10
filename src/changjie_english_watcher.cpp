@@ -32,6 +32,7 @@ NOTIFYICONDATAW g_nid = {};
 UINT_PTR g_timerId = 0;
 DWORD g_checkIntervalMs = 1000; // Default: check every 1 second
 HANDLE g_hMutex = nullptr;
+DWORD g_lastTimerTick = 0; // Track last WM_TIMER time for debugging
 
 // Forward declarations
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -169,6 +170,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     switch (msg) {
         case WM_TIMER:
             if (wParam == 1) {
+                g_lastTimerTick = GetTickCount();
                 CheckAndSwitchIME();
                 UpdateTrayTooltip();
             }
@@ -246,9 +248,10 @@ void UpdateTrayTooltip()
     DWORD convMode = GetCurrentConversionMode();
     DWORD sentMode = GetCurrentSentenceMode();
 
-    // Build tooltip with diagnostic info
+    // Build tooltip with diagnostic info including last timer tick
     wchar_t tooltip[128];
-    swprintf_s(tooltip, 128, L"Changjie Watcher | Conv:0x%08X Sent:0x%08X", convMode, sentMode);
+    swprintf_s(tooltip, 128, L"Changjie Watcher | Conv:0x%08X Sent:0x%08X | Last:%u",
+               convMode, sentMode, g_lastTimerTick);
 
     // Update tray icon tooltip
     wcscpy_s(g_nid.szTip, tooltip);

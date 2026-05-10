@@ -113,6 +113,36 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     }
     output << L"\n";
 
+    // TSF Context Information
+    output << L"TSF Context Information:\n";
+    ITfThreadMgr* pThreadMgr = nullptr;
+    hr = CoCreateInstance(CLSID_TF_ThreadMgr, nullptr, CLSCTX_INPROC_SERVER,
+                          IID_ITfThreadMgr, reinterpret_cast<void**>(&pThreadMgr));
+    if (SUCCEEDED(hr) && pThreadMgr) {
+        ITfDocumentMgr* pDocMgr = nullptr;
+        hr = pThreadMgr->GetFocus(&pDocMgr);
+        if (SUCCEEDED(hr) && pDocMgr) {
+            ITfContext* pContext = nullptr;
+            hr = pDocMgr->GetTop(&pContext);
+            if (SUCCEEDED(hr) && pContext) {
+                output << L"  Context: Available\n";
+                pContext->Release();
+            } else {
+                output << L"  Context: Not Available (HRESULT: 0x"
+                       << std::hex << hr << std::dec << L")\n";
+            }
+            pDocMgr->Release();
+        } else {
+            output << L"  Focus Document: Not Available (HRESULT: 0x"
+                   << std::hex << hr << std::dec << L")\n";
+        }
+        pThreadMgr->Release();
+    } else {
+        output << L"  ERROR: Failed to create ITfThreadMgr (HRESULT: 0x"
+               << std::hex << hr << std::dec << L")\n";
+    }
+    output << L"\n";
+
     // Detection results
     output << L"Detection:\n";
     output << L"  Changjie Active:   " << (IsChangjieIMEActive() ? L"YES" : L"NO") << L"\n";
