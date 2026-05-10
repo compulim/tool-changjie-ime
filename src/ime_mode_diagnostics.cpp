@@ -7,6 +7,9 @@
 #include "ime_common.h"
 #include <sstream>
 #include <iomanip>
+#include <ctfutb.h>
+
+#pragma comment(lib, "msctf.lib")
 
 // Helper to convert GUID to string
 std::wstring GuidToString(const GUID& guid)
@@ -52,6 +55,177 @@ std::wstring DecodeConversionMode(DWORD mode)
     if (mode & IME_CMODE_FIXED) ss << L"        FIXED\n";
 
     return ss.str();
+}
+
+// Helper to get the interface type name
+std::wstring GetInterfaceTypeName(IUnknown* pUnk)
+{
+    std::wstringstream ss;
+
+    // Test each interface type
+    ITfLangBarItemButton* pButton = nullptr;
+    if (SUCCEEDED(pUnk->QueryInterface(IID_ITfLangBarItemButton, (void**)&pButton))) {
+        ss << L"ITfLangBarItemButton";
+        pButton->Release();
+    }
+
+    ITfLangBarItemBitmapButton* pBitmapButton = nullptr;
+    if (SUCCEEDED(pUnk->QueryInterface(IID_ITfLangBarItemBitmapButton, (void**)&pBitmapButton))) {
+        if (ss.tellp() > 0) ss << L", ";
+        ss << L"ITfLangBarItemBitmapButton";
+        pBitmapButton->Release();
+    }
+
+    ITfLangBarItemBitmap* pBitmap = nullptr;
+    if (SUCCEEDED(pUnk->QueryInterface(IID_ITfLangBarItemBitmap, (void**)&pBitmap))) {
+        if (ss.tellp() > 0) ss << L", ";
+        ss << L"ITfLangBarItemBitmap";
+        pBitmap->Release();
+    }
+
+    ITfSystemLangBarItem* pSystemItem = nullptr;
+    if (SUCCEEDED(pUnk->QueryInterface(IID_ITfSystemLangBarItem, (void**)&pSystemItem))) {
+        if (ss.tellp() > 0) ss << L", ";
+        ss << L"ITfSystemLangBarItem";
+        pSystemItem->Release();
+    }
+
+    ITfSystemDeviceTypeLangBarItem* pSystemDeviceType = nullptr;
+    if (SUCCEEDED(pUnk->QueryInterface(IID_ITfSystemDeviceTypeLangBarItem, (void**)&pSystemDeviceType))) {
+        if (ss.tellp() > 0) ss << L", ";
+        ss << L"ITfSystemDeviceTypeLangBarItem";
+        pSystemDeviceType->Release();
+    }
+
+    ITfSystemLangBarItemSink* pSystemSink = nullptr;
+    if (SUCCEEDED(pUnk->QueryInterface(IID_ITfSystemLangBarItemSink, (void**)&pSystemSink))) {
+        if (ss.tellp() > 0) ss << L", ";
+        ss << L"ITfSystemLangBarItemSink";
+        pSystemSink->Release();
+    }
+
+    // Base interface - always test last
+    ITfLangBarItem* pItem = nullptr;
+    if (SUCCEEDED(pUnk->QueryInterface(IID_ITfLangBarItem, (void**)&pItem))) {
+        if (ss.tellp() > 0) ss << L", ";
+        ss << L"ITfLangBarItem";
+        pItem->Release();
+    }
+
+    if (ss.tellp() == 0) {
+        return L"Unknown";
+    }
+
+    return ss.str();
+}
+
+// Helper to enumerate and display language bar item details
+void EnumerateLangBarItems(std::wstringstream& output)
+{
+    output << L"Language Bar Items (via TF_CreateLangBarItemMgr):\n";
+    output << L"================================================\n\n";
+
+    ITfLangBarItemMgr* pLangBarItemMgr = nullptr;
+    HRESULT hr = TF_CreateLangBarItemMgr(&pLangBarItemMgr);
+
+    if (FAILED(hr) || !pLangBarItemMgr) {
+        output << L"  Failed to create ITfLangBarItemMgr (HRESULT: 0x"
+               << std::hex << hr << std::dec << L")\n\n";
+        return;
+    }
+
+    IEnumTfLangBarItems* pEnum = nullptr;
+    hr = pLangBarItemMgr->EnumItems(&pEnum);
+
+    if (FAILED(hr) || !pEnum) {
+        output << L"  Failed to enumerate items (HRESULT: 0x"
+               << std::hex << hr << std::dec << L")\n\n";
+        pLangBarItemMgr->Release();
+        return;
+    }
+
+    ITfLangBarItem* pItem = nullptr;
+    ULONG fetched = 0;
+    int itemCount = 0;
+
+    while (pEnum->Next(1, &pItem, &fetched) == S_OK && fetched > 0) {
+        itemCount++;
+        output << L"Item #" << itemCount << L":\n";
+
+        // Get basic item info
+        TF_LANGBARITEMINFO info = {};
+        if (SUCCEEDED(pItem->GetInfo(&info))) {
+            output << L"  GUID: " << GuidToString(info.guidItem) << L"\n";
+            output << L"  Flags: 0x" << std::hex << info.dwStyle << std::dec << L"\n";
+            output << L"  Sort: " << info.ulSort << L"\n";
+            output << L"  Description: " << info.szDescription << L"\n";
+        }
+
+        // Get interface types
+        output << L"  Interface Types: " << GetInterfaceTypeName(pItem) << L"\n";
+
+        // Try to get button-specific info
+        ITfLangBarItemButton* pButton = nullptr;
+        if (SUCCEEDED(pItem->QueryInterface(IID_ITfLangBarItemButton, (void**)&pButton))) {
+            BSTR text = nullptr;
+            if (SUCCEEDED(pButton->GetText(&text)) && text) {
+                output << L"  Button Text: " << text << L"\n";
+                SysFreeString(text);
+            }
+
+            HICON hIcon = nullptr;
+            if (SUCCEEDED(pButton->GetIcon(&hIcon)) && hIcon) {
+                output << L"  Button Icon: 0x" << std::hex
+                       << reinterpret_cast<UINT_PTR>(hIcon) << std::dec << L"\n";
+                DestroyIcon(hIcon);
+            }
+
+            BSTR tooltip = nullptr;
+            if (SUCCEEDED(pButton->GetTooltipString(&tooltip)) && tooltip) {
+                output << L"  Tooltip: " << tooltip << L"\n";
+                SysFreeString(tooltip);
+            }
+
+            pButton->Release();
+        }
+
+        // Try to get bitmap info
+        ITfLangBarItemBitmap* pBitmap = nullptr;
+        if (SUCCEEDED(pItem->QueryInterface(IID_ITfLangBarItemBitmap, (void**)&pBitmap))) {
+            HBITMAP hBitmap = nullptr;
+            SIZE size = {};
+            if (SUCCEEDED(pBitmap->GetPreferredSize(&size, &hBitmap)) && hBitmap) {
+                output << L"  Bitmap: 0x" << std::hex
+                       << reinterpret_cast<UINT_PTR>(hBitmap) << std::dec
+                       << L" (Size: " << size.cx << L"x" << size.cy << L")\n";
+                DeleteObject(hBitmap);
+            }
+            pBitmap->Release();
+        }
+
+        // Try to get bitmap button info
+        ITfLangBarItemBitmapButton* pBitmapButton = nullptr;
+        if (SUCCEEDED(pItem->QueryInterface(IID_ITfLangBarItemBitmapButton, (void**)&pBitmapButton))) {
+            BSTR text = nullptr;
+            if (SUCCEEDED(pBitmapButton->GetText(&text)) && text) {
+                output << L"  Bitmap Button Text: " << text << L"\n";
+                SysFreeString(text);
+            }
+            pBitmapButton->Release();
+        }
+
+        output << L"\n";
+        pItem->Release();
+    }
+
+    if (itemCount == 0) {
+        output << L"  No language bar items found.\n\n";
+    } else {
+        output << L"Total items: " << itemCount << L"\n\n";
+    }
+
+    pEnum->Release();
+    pLangBarItemMgr->Release();
 }
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
@@ -190,7 +364,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     output << L"Detection Results:\n";
     output << L"  IsChangjieIMEActive(): " << (IsChangjieIMEActive() ? L"TRUE" : L"FALSE") << L"\n";
     output << L"  IsEnglishUSActive(): " << (IsEnglishUSActive() ? L"TRUE" : L"FALSE") << L"\n";
-    output << L"  IsChangjieChineseModeActive(): " << (IsChangjieChineseModeActive() ? L"TRUE" : L"FALSE") << L"\n";
+    output << L"  IsChangjieChineseModeActive(): " << (IsChangjieChineseModeActive() ? L"TRUE" : L"FALSE") << L"\n\n";
+
+    // Enumerate language bar items
+    EnumerateLangBarItems(output);
 
     CoUninitialize();
 
