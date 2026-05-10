@@ -8,17 +8,26 @@
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
-    CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+    HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+    if (FAILED(hr))
+        return 1;
 
+    int exitCode = 0;
     if (!IsChangjieIMEActive()) {
-        ActivateChangjieIME();
+        hr = ActivateChangjieIME();
+        if (FAILED(hr)) {
+            CoUninitialize();
+            return 1;
+        }
         // Give the foreground application a moment to process the profile
         // change before we attempt to set the conversion mode.
         Sleep(PROFILE_SWITCH_DELAY_MS);
     }
 
-    SetChineseMode();
+    hr = SetChineseMode();
+    if (FAILED(hr))
+        exitCode = 1;
 
     CoUninitialize();
-    return 0;
+    return exitCode;
 }

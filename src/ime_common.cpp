@@ -2,6 +2,19 @@
 
 // ---------------------------------------------------------------------------
 // Microsoft ChangJie IME GUIDs
+//
+// NOTE: These GUIDs may vary between Windows versions and system configurations.
+// If the tools are not working (no-op behavior), the GUIDs may be incorrect for
+// your system. To find the correct GUIDs for your installation:
+//
+// 1. Open Registry Editor (regedit.exe)
+// 2. Navigate to: HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\CTF\TIP
+// 3. Look for an entry with "ChangJie" or "倉頡" in the description
+// 4. Note the CLSID (the GUID under TIP)
+// 5. Under that CLSID, navigate to: LanguageProfile\0404 (zh-TW)
+// 6. Note the Profile GUID
+//
+// Update the GUIDs below to match your system.
 // ---------------------------------------------------------------------------
 
 // CLSID: {4BDF9F03-C7D3-11D4-B2AB-0080C882687E}

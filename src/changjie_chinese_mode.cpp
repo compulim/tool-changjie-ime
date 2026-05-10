@@ -7,11 +7,17 @@
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
-    CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+    HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+    if (FAILED(hr))
+        return 1;
 
-    if (IsChangjieIMEActive())
-        SetChineseMode();
+    int exitCode = 0;
+    if (IsChangjieIMEActive()) {
+        hr = SetChineseMode();
+        if (FAILED(hr))
+            exitCode = 1;
+    }
 
     CoUninitialize();
-    return 0;
+    return exitCode;
 }

@@ -16,6 +16,7 @@ Each utility compiles to a single, self-contained EXE with no console window.  T
 | `switch-to-english-us.exe` | Switch to the English (US) keyboard layout if it is not already active. |
 | `switch-to-changjie-chinese.exe` | Switch to ChangJie IME (if needed) **and** set Chinese input mode. |
 | `toggle-changjie-english.exe` | Toggle between ChangJie IME and English (US). When landing on ChangJie, Chinese mode is activated automatically. |
+| `list-ime-profiles.exe` | **Diagnostic tool:** Display all available IME profiles in a message box. Use this to find the correct GUIDs for your system. |
 
 ---
 
@@ -30,9 +31,11 @@ The default GUIDs for the Microsoft ChangJie IME shipped with Windows are:
 
 | Item | GUID |
 |---|---|
-| CLSID | `{A76C93D9-5523-4E90-AAFA-4DB112F9AC76}` |
-| Profile (ChangJie input) | `{B115690A-EA02-48D5-A231-E3578D2FDF80}` |
+| CLSID | `{4BDF9F03-C7D3-11D4-B2AB-0080C882687E}` |
+| Profile (ChangJie input) | `{531FDEBF-9B4C-4A43-A2AA-960E8FCDC732}` |
 | Language | `0x0404` (zh-TW, Traditional Chinese) |
+
+**Note:** These GUIDs may vary between Windows versions and system configurations. If the tools are not working (returning immediately without effect), the GUIDs may be incorrect for your system.
 
 You can verify these on your machine under:
 ```
