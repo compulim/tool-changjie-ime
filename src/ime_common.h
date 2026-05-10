@@ -34,8 +34,8 @@
 //   HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\CTF\TIP\{CLSID}
 //     \LanguageProfile\{langid}\{ProfileGUID}
 //
-// CLSID: {4BDF9F03-C7D3-11D4-B2AB-0080C882687E}
-// Profile GUID (ChangJie): {531FDEBF-9B4C-4A43-A2AA-960E8FCDC732}
+// CLSID: {531FDEBF-9B4C-4A43-A2AA-960E8FCDC732}
+// Profile GUID (ChangJie): {4BDF9F03-C7D3-11D4-B2AB-0080C882687E}
 // ---------------------------------------------------------------------------
 extern const CLSID CLSID_ChangjieIME;
 extern const GUID  GUID_ChangjieProfile;

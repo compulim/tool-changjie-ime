@@ -17,16 +17,16 @@
 // Update the GUIDs below to match your system.
 // ---------------------------------------------------------------------------
 
-// CLSID: {4BDF9F03-C7D3-11D4-B2AB-0080C882687E}
+// CLSID: {531FDEBF-9B4C-4A43-A2AA-960E8FCDC732}
 const CLSID CLSID_ChangjieIME = {
-    0x4BDF9F03, 0xC7D3, 0x11D4,
-    { 0xB2, 0xAB, 0x00, 0x80, 0xC8, 0x82, 0x68, 0x7E }
-};
-
-// Profile GUID for ChangJie input: {531fdebf-9b4c-4a43-a2aa-960e8fcdc732}
-const GUID GUID_ChangjieProfile = {
     0x531FDEBF, 0x9B4C, 0x4A43,
     { 0xA2, 0xAA, 0x96, 0x0E, 0x8F, 0xCD, 0xC7, 0x32 }
+};
+
+// Profile GUID for ChangJie input: {4BDF9F03-C7D3-11D4-B2AB-0080C882687E}
+const GUID GUID_ChangjieProfile = {
+    0x4BDF9F03, 0xC7D3, 0x11D4,
+    { 0xB2, 0xAB, 0x00, 0x80, 0xC8, 0x82, 0x68, 0x7E }
 };
 
 // ---------------------------------------------------------------------------
