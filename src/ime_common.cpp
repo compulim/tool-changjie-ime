@@ -195,11 +195,18 @@ HRESULT ActivateEnglishUS()
 
     pProfileMgr->Release();
 
-    // Also send WM_INPUTLANGCHANGEREQUEST to the foreground window to ensure immediate effect
+    // Send WM_INPUTLANGCHANGEREQUEST to ensure immediate effect
     HWND hwndForeground = GetForegroundWindow();
     if (hwndForeground) {
         // Post the message asynchronously to avoid blocking
         PostMessageW(hwndForeground, WM_INPUTLANGCHANGEREQUEST, 0, reinterpret_cast<LPARAM>(hklEnUS));
+    } else {
+        // When no foreground window (e.g., desktop has focus), broadcast to the shell window
+        // The shell window (typically explorer.exe) handles the system tray and taskbar
+        HWND hwndShell = GetShellWindow();
+        if (hwndShell) {
+            PostMessageW(hwndShell, WM_INPUTLANGCHANGEREQUEST, 0, reinterpret_cast<LPARAM>(hklEnUS));
+        }
     }
 
     return hr;
