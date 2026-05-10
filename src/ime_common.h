@@ -52,7 +52,7 @@ static const wchar_t* LAYOUT_ID_ENUS = L"00000409";
 // WM_IME_CONTROL to the foreground window.  The profile switch is
 // asynchronous; the brief delay lets the target application process the
 // WM_INPUTLANGCHANGE notification before we set the conversion mode.
-static const DWORD PROFILE_SWITCH_DELAY_MS = 20;
+static const DWORD PROFILE_SWITCH_DELAY_MS = 50;
 
 // Parse the delay value from command-line arguments. If a numeric argument
 // is provided, use it; otherwise, return the default PROFILE_SWITCH_DELAY_MS.
@@ -73,9 +73,6 @@ bool IsEnglishUSActive();
 
 // Return true if the ChangJie IME is active AND in Chinese (native) input mode.
 bool IsChangjieChineseModeActive();
-
-// Return true if the ChangJie IME is active AND in English (alphanumeric) input mode.
-bool IsChangjieEnglishModeActive();
 
 // Get conversion mode using ImmGetConversionStatus (alternative to WM_IME_CONTROL).
 DWORD GetConversionModeViaImmContext();
