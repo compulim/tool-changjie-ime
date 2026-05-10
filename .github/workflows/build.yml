@@ -1,0 +1,85 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write   # needed to create GitHub releases
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Visual Studio 2022 with MSVC is pre-installed on windows-latest.
+      # We use the x64 native tools environment for a 64-bit build.
+      - name: Configure (Release, x64)
+        run: |
+          cmake -B build `
+                -G "Visual Studio 17 2022" `
+                -A x64 `
+                -DCMAKE_BUILD_TYPE=Release
+        shell: pwsh
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+        shell: pwsh
+
+      - name: List artifacts
+        run: Get-ChildItem -Path build\Release -Filter "*.exe" | Select-Object Name, Length
+        shell: pwsh
+
+      # -----------------------------------------------------------------------
+      # Package all EXEs into a single zip archive
+      # -----------------------------------------------------------------------
+      - name: Package
+        shell: pwsh
+        run: |
+          $exes = Get-ChildItem -Path build\Release -Filter "*.exe" | Select-Object -ExpandProperty FullName
+          Compress-Archive -Path $exes -DestinationPath changjie-ime-tools.zip
+
+      # -----------------------------------------------------------------------
+      # Upload the archive as a workflow artifact (available on every run)
+      # -----------------------------------------------------------------------
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: changjie-ime-tools
+          path: changjie-ime-tools.zip
+          if-no-files-found: error
+
+      # -----------------------------------------------------------------------
+      # Publish a GitHub Release when a version tag (v*) is pushed.
+      # Uses only the built-in gh CLI — no third-party release actions.
+      # -----------------------------------------------------------------------
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $files = @(
+            "build\Release\switch-to-changjie.exe",
+            "build\Release\changjie-chinese-mode.exe",
+            "build\Release\changjie-english-mode.exe",
+            "build\Release\switch-to-english-us.exe",
+            "build\Release\switch-to-changjie-chinese.exe",
+            "build\Release\toggle-changjie-english.exe",
+            "changjie-ime-tools.zip"
+          )
+          gh release create $tag `
+            --title "Release $tag" `
+            --generate-notes `
+            @files
