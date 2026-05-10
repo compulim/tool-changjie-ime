@@ -246,11 +246,18 @@ DWORD WINAPI WatcherThreadProc(LPVOID lpParam)
     }
 
     while (g_bRunning) {
-        // Check and switch if needed
-        CheckAndSwitchIME();
-
-        // Sleep for the configured interval
+        // Sleep first, then check (avoid immediate trigger on startup)
         Sleep(g_checkIntervalMs);
+
+        if (!g_bRunning) break;
+
+        // Check and switch if needed (with exception safety)
+        __try {
+            CheckAndSwitchIME();
+        }
+        __except(EXCEPTION_EXECUTE_HANDLER) {
+            // Continue running even if there's an exception
+        }
     }
 
     CoUninitialize();
