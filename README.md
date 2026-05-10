@@ -5,17 +5,17 @@
 
 ## Background
 
-Windows IME has a feature enabling "typing English while in a native keyboard." This is not the same experience as English US or other similar keyboards.
+Windows IME has a feature enabling "typing English while in a native keyboard." The typing experience is not the same when compare to English US or other similar keyboards.
 
-The differences in UX is causing a lot of annoyance. For example, <kbd>CTRL</kbd> + <kbd>SPACEBAR</kbd> would insert a space when using English US. However, when using Changjie IME English mode, it will not insert a space. User need to change to English US keyboard.
+The differences in UX is causing a lot of annoyance. For example, <kbd>SHIFT</kbd> + <kbd>SPACEBAR</kbd> would insert a space when using English US. However, when using Changjie IME English mode, it will not insert a space. User would need to change to English US keyboard.
 
-What's worse, as Windows Text Services Framework allow text box to be scoped to English. Switching to the English mode becomes more a frequent issue.
+What's worse, as Windows Text Services Framework allow text box to be scoped or recommended to operate in English. Focusing on such text boxes with Changjie will forcefully change it to English mode. This makes the problem happen more often. For example, Edge address bar is "recommended to operate in English", while HTML password box is "strictly operate in English".
 
-This set of tools will allow you to programmatically switch to English US or Changjie. They are made to run using shortcut key manager such as PowerToys Keyboard Manager.
+This set of tools will allow you to orhcestrate them to programmatically switch to English US or Changjie. They are made to run with shortcut key manager such as PowerToys Keyboard Manager.
 
-- `changjie-english-watcher` will lock Changjie English mode out by switching to English US
+- `changjie-english-watcher` will lockout Changjie English mode by switching to English US when Changjie English is detected
    - Should run on startup
-- `switch-to-changjie-chinese` will switch to Changjie and Chinese mode in a single tap
+- `switch-to-changjie-chinese` will switch to Changjie and Chinese mode with a single run
    - Should set to <kbd>CTRL</kbd> + <kbd>SPACEBAR</kbd>
 
 When using these two tools, Changjie English mode will be more-or-less disabled.
