@@ -33,6 +33,7 @@ UINT_PTR g_timerId = 0;
 DWORD g_checkIntervalMs = 1000; // Default: check every 1 second
 HANDLE g_hMutex = nullptr;
 DWORD g_lastTimerTick = 0; // Track last WM_TIMER time for debugging
+DWORD g_lastSwitchTick = 0; // Track when we last switched to English US
 
 // Forward declarations
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -239,6 +240,8 @@ void CheckAndSwitchIME()
     if (IsChangjieEnglishModeActive()) {
         // Switch to English US
         ActivateEnglishUS();
+        // Record when we performed the switch
+        g_lastSwitchTick = GetTickCount();
     }
 }
 
@@ -248,10 +251,15 @@ void UpdateTrayTooltip()
     DWORD convMode = GetCurrentConversionMode();
     DWORD sentMode = GetCurrentSentenceMode();
 
-    // Build tooltip with diagnostic info including last timer tick
+    // Build tooltip with diagnostic info including last timer tick and last switch
     wchar_t tooltip[128];
-    swprintf_s(tooltip, 128, L"Changjie Watcher | Conv:0x%08X Sent:0x%08X | Last:%u",
-               convMode, sentMode, g_lastTimerTick);
+    if (g_lastSwitchTick > 0) {
+        swprintf_s(tooltip, 128, L"Changjie Watcher | Conv:0x%08X Sent:0x%08X | Last:%u Switch:%u",
+                   convMode, sentMode, g_lastTimerTick, g_lastSwitchTick);
+    } else {
+        swprintf_s(tooltip, 128, L"Changjie Watcher | Conv:0x%08X Sent:0x%08X | Last:%u",
+                   convMode, sentMode, g_lastTimerTick);
+    }
 
     // Update tray icon tooltip
     wcscpy_s(g_nid.szTip, tooltip);
