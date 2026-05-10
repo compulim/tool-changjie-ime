@@ -1,4 +1,4 @@
-// Tool 6: Toggle between ChangJie IME and English (US) keyboard layout.
+// Tool 6: Toggle between ChangJie IME in Chinese mode and English (US) keyboard layout.
 //         When landing on ChangJie, also switch to Chinese (native) input mode.
 //
 // Uses: ITfInputProcessorProfileMgr (COM / TSF) for profile activation,
