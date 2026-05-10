@@ -8,12 +8,6 @@
 #include <sstream>
 #include <iomanip>
 
-// TSF Compartment GUIDs for conversion mode
-static const GUID GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION =
-    {0xCCF05DD8, 0x4A87, 0x11D7, {0xA6, 0xE2, 0x00, 0x06, 0x5B, 0x84, 0x43, 0x5C}};
-
-static const GUID GUID_COMPARTMENT_KEYBOARD_INPUTMODE_SENTENCE =
-    {0xCCF05DD9, 0x4A87, 0x11D7, {0xA6, 0xE2, 0x00, 0x06, 0x5B, 0x84, 0x43, 0x5C}};
 
 // Helper to convert GUID to string
 std::wstring GuidToString(const GUID& guid)
@@ -59,46 +53,6 @@ std::wstring DecodeConversionMode(DWORD mode)
     if (mode & IME_CMODE_FIXED) ss << L"        FIXED\n";
 
     return ss.str();
-}
-
-// Helper to get TSF compartment value (conversion or sentence mode)
-DWORD GetTSFCompartmentValue(const GUID& compartmentGuid, bool* success = nullptr)
-{
-    if (success) *success = false;
-
-    ITfThreadMgr* pThreadMgr = nullptr;
-    HRESULT hr = CoCreateInstance(CLSID_TF_ThreadMgr, nullptr,
-                                  CLSCTX_INPROC_SERVER,
-                                  IID_ITfThreadMgr,
-                                  reinterpret_cast<void**>(&pThreadMgr));
-    if (FAILED(hr)) return static_cast<DWORD>(-1);
-
-    ITfCompartmentMgr* pCompMgr = nullptr;
-    hr = pThreadMgr->QueryInterface(IID_ITfCompartmentMgr,
-                                    reinterpret_cast<void**>(&pCompMgr));
-    pThreadMgr->Release();
-    if (FAILED(hr)) return static_cast<DWORD>(-1);
-
-    ITfCompartment* pCompartment = nullptr;
-    hr = pCompMgr->GetCompartment(compartmentGuid, &pCompartment);
-    pCompMgr->Release();
-    if (FAILED(hr)) return static_cast<DWORD>(-1);
-
-    VARIANT var;
-    VariantInit(&var);
-    hr = pCompartment->GetValue(&var);
-    pCompartment->Release();
-
-    if (FAILED(hr) || var.vt != VT_I4) {
-        VariantClear(&var);
-        return static_cast<DWORD>(-1);
-    }
-
-    DWORD value = static_cast<DWORD>(var.lVal);
-    VariantClear(&var);
-
-    if (success) *success = true;
-    return value;
 }
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
@@ -183,28 +137,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         output << L"TSF Active Profile: Failed to get (HRESULT: 0x"
                << std::hex << hr << std::dec << L")\n\n";
     }
-
-    // Get TSF compartment values (conversion and sentence mode)
-    bool convSuccess = false, sentSuccess = false;
-    DWORD tsfConvMode = GetTSFCompartmentValue(GUID_COMPARTMENT_KEYBOARD_INPUTMODE_CONVERSION, &convSuccess);
-    DWORD tsfSentMode = GetTSFCompartmentValue(GUID_COMPARTMENT_KEYBOARD_INPUTMODE_SENTENCE, &sentSuccess);
-
-    output << L"TSF Compartment Values:\n";
-    output << L"  Conversion Mode: ";
-    if (convSuccess) {
-        output << DwordToHex(tsfConvMode) << L"\n";
-        output << L"    " << DecodeConversionMode(tsfConvMode);
-    } else {
-        output << L"(failed to read)\n";
-    }
-
-    output << L"  Sentence Mode: ";
-    if (sentSuccess) {
-        output << DwordToHex(tsfSentMode) << L"\n";
-    } else {
-        output << L"(failed to read)\n";
-    }
-    output << L"\n";
 
     // Get IME window info
     if (hwndForeground) {
