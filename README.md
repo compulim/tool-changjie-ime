@@ -27,6 +27,8 @@ Each utility compiles to a single, self-contained EXE with no console window.  T
 
 ### ChangJie IME GUIDs
 
+> The GUID can be found in https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/windows-language-pack-default-values?view=windows-11.
+
 The default GUIDs for the Microsoft ChangJie IME shipped with Windows are:
 
 | Item | GUID |
