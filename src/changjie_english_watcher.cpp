@@ -239,8 +239,10 @@ void CheckAndSwitchIME()
 // Watcher thread that periodically checks IME state
 DWORD WINAPI WatcherThreadProc(LPVOID lpParam)
 {
-    // Initialize COM for this thread
-    HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+    // Initialize COM for this thread using multithreaded apartment
+    // We use MTA instead of STA because this worker thread doesn't pump messages,
+    // and STA requires a message loop for COM marshalling to work properly
+    HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
     if (FAILED(hr)) {
         return 1;
     }
