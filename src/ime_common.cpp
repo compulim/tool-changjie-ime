@@ -61,27 +61,26 @@ bool IsChangjieIMEActive()
 
 bool IsEnglishUSActive()
 {
-    TF_INPUTPROCESSORPROFILE profile = {};
-    if (FAILED(GetActiveProfile(&profile))) return false;
-
-    // Check TSF profile type and language ID
-    bool tsfMatch = (profile.dwProfileType == TF_PROFILETYPE_KEYBOARDLAYOUT)
-        && (profile.langid == LANGID_EnglishUS);
-
-    // Also verify using the foreground window's keyboard layout
+    // First check the foreground window's actual keyboard layout
+    // This is the most reliable indicator of what the user will type
     HWND hwnd = GetForegroundWindow();
     if (hwnd) {
         DWORD threadId = GetWindowThreadProcessId(hwnd, nullptr);
         HKL currentHKL = GetKeyboardLayout(threadId);
         LANGID currentLangID = LOWORD(currentHKL);
-        bool hklMatch = (currentLangID == LANGID_EnglishUS);
 
-        // Both checks should agree for a true positive
-        return tsfMatch && hklMatch;
+        // If the foreground window has English US, we're done
+        if (currentLangID == LANGID_EnglishUS) {
+            return true;
+        }
     }
 
-    // If we can't get foreground window, fall back to TSF check only
-    return tsfMatch;
+    // Fallback: check TSF profile (might be out of sync with foreground window)
+    TF_INPUTPROCESSORPROFILE profile = {};
+    if (FAILED(GetActiveProfile(&profile))) return false;
+
+    return (profile.dwProfileType == TF_PROFILETYPE_KEYBOARDLAYOUT)
+        && (profile.langid == LANGID_EnglishUS);
 }
 
 bool IsChangjieChineseModeActive()
@@ -123,16 +122,13 @@ HRESULT ActivateEnglishUS()
 {
     // Resolve the HKL for the US English keyboard layout.
     // "00000409" is the standard layout identifier for en-US.
-    // KLF_ACTIVATE flag is needed to actually activate the layout.
-    HKL hklEnUS = LoadKeyboardLayoutW(LAYOUT_ID_ENUS, KLF_ACTIVATE);
+    HKL hklEnUS = LoadKeyboardLayoutW(LAYOUT_ID_ENUS, 0);
     if (!hklEnUS) {
         // Fallback to the well-known HKL value for en-US.
         hklEnUS = reinterpret_cast<HKL>(static_cast<ULONG_PTR>(0x04090409));
     }
 
-    // Also use ActivateKeyboardLayout to ensure the layout is activated for the current thread.
-    ActivateKeyboardLayout(hklEnUS, KLF_SETFORPROCESS);
-
+    // Use TSF to activate the profile session-wide first
     ITfInputProcessorProfileMgr* pProfileMgr = nullptr;
     HRESULT hr = CoCreateInstance(
         CLSID_TF_InputProcessorProfiles,
@@ -151,6 +147,14 @@ HRESULT ActivateEnglishUS()
         TF_IPPMF_FORSESSION);
 
     pProfileMgr->Release();
+
+    // Also send WM_INPUTLANGCHANGEREQUEST to the foreground window to ensure immediate effect
+    HWND hwndForeground = GetForegroundWindow();
+    if (hwndForeground) {
+        // Post the message asynchronously to avoid blocking
+        PostMessageW(hwndForeground, WM_INPUTLANGCHANGEREQUEST, 0, reinterpret_cast<LPARAM>(hklEnUS));
+    }
+
     return hr;
 }
 
