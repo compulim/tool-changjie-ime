@@ -34,17 +34,22 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR lpCmdLine, int)
     // attempting to set Chinese mode will fail, leaving the IME in
     // Changjie English mode. In such cases, switch back to English US.
     // We retry the check multiple times with delays to account for async processing.
-    bool chineseModeActivated = false;
+    bool shouldRevertToEnglishUS = false;
     for (int attempt = 0; attempt < 10; ++attempt) {
         Sleep(PROFILE_SWITCH_DELAY_MS);
+        if (IsChangjieEnglishModeActive()) {
+            // We're in Changjie English mode (not Chinese mode)
+            shouldRevertToEnglishUS = true;
+            break;
+        }
         if (IsChangjieChineseModeActive()) {
-            chineseModeActivated = true;
+            // Successfully in Chinese mode
             break;
         }
     }
 
-    if (!chineseModeActivated) {
-        // Chinese mode activation failed — revert to English US.
+    if (shouldRevertToEnglishUS) {
+        // Chinese mode activation failed and we're in Changjie English mode — revert to English US.
         hr = ActivateEnglishUS();
         if (FAILED(hr))
             exitCode = 1;
