@@ -53,16 +53,7 @@ HRESULT GetActiveProfile(TF_INPUTPROCESSORPROFILE* pProfile)
 
 bool IsChangjieIMEActive()
 {
-    // First check the current thread's keyboard layout (0 = calling thread)
-    // This gives us the default keyboard layout for this process
-    HKL currentHKL = GetKeyboardLayout(0);
-    LANGID currentLangID = LOWORD(currentHKL);
-    if (currentLangID == LANGID_TraditionalChinese) {
-        // It's a Traditional Chinese IME - assume it's ChangJie
-        return true;
-    }
-
-    // Also check the foreground window's thread keyboard layout
+    // First check the foreground window's thread keyboard layout
     HWND hwnd = GetForegroundWindow();
     if (hwnd) {
         DWORD threadId = GetWindowThreadProcessId(hwnd, nullptr);
@@ -203,6 +194,14 @@ HRESULT ActivateEnglishUS()
         TF_IPPMF_FORSESSION);
 
     pProfileMgr->Release();
+
+    // Also send WM_INPUTLANGCHANGEREQUEST to the foreground window to ensure immediate effect
+    HWND hwndForeground = GetForegroundWindow();
+    if (hwndForeground) {
+        // Post the message asynchronously to avoid blocking
+        PostMessageW(hwndForeground, WM_INPUTLANGCHANGEREQUEST, 0, reinterpret_cast<LPARAM>(hklEnUS));
+    }
+
     return hr;
 }
 
