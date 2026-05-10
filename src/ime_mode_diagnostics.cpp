@@ -34,9 +34,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         wchar_t windowTitle[256] = {0};
         GetWindowTextW(hwndForeground, windowTitle, 256);
         output << L"Window: " << windowTitle << L"\n\n";
+    } else {
+        output << L"ERROR: No foreground window\n\n";
     }
 
-    // Get TSF active profile - condensed
+    // Get TSF active profile
     TF_INPUTPROCESSORPROFILE profile = {};
     hr = GetActiveProfile(&profile);
     if (SUCCEEDED(hr)) {
@@ -52,40 +54,70 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             output << L" [Changjie]";
         }
         output << L"\n\n";
+    } else {
+        output << L"ERROR: GetActiveProfile failed (HRESULT: 0x"
+               << std::hex << hr << std::dec << L")\n\n";
     }
 
-    // WM_IME_CONTROL values (primary method)
-    DWORD modeWMI = GetCurrentConversionMode();
-    DWORD sentWMI = GetCurrentSentenceMode();
-    output << L"WM_IME_CONTROL:\n";
-    output << L"  Conversion: " << DwordToHex(modeWMI);
-    if (modeWMI != static_cast<DWORD>(-1) && (modeWMI & IME_CMODE_NATIVE)) {
-        output << L" [NATIVE]";
-    }
-    output << L"\n  Sentence:   " << DwordToHex(sentWMI) << L"\n\n";
+    // WM_IME_CONTROL method
+    output << L"WM_IME_CONTROL Method:\n";
+    HWND imeWnd = hwndForeground ? ImmGetDefaultIMEWnd(hwndForeground) : nullptr;
+    if (!hwndForeground) {
+        output << L"  ERROR: No foreground window\n";
+    } else if (!imeWnd) {
+        output << L"  ERROR: ImmGetDefaultIMEWnd returned NULL\n";
+    } else {
+        DWORD modeWMI = GetCurrentConversionMode();
+        DWORD sentWMI = GetCurrentSentenceMode();
 
-    // ImmGetConversionStatus (when available)
-    if (hwndForeground) {
+        if (modeWMI == static_cast<DWORD>(-1)) {
+            output << L"  Conversion: FAILED\n";
+        } else {
+            output << L"  Conversion: " << DwordToHex(modeWMI);
+            if (modeWMI & IME_CMODE_NATIVE) {
+                output << L" [NATIVE]";
+            }
+            output << L"\n";
+        }
+
+        if (sentWMI == static_cast<DWORD>(-1)) {
+            output << L"  Sentence:   FAILED\n";
+        } else {
+            output << L"  Sentence:   " << DwordToHex(sentWMI) << L"\n";
+        }
+    }
+    output << L"\n";
+
+    // ImmGetContext method
+    output << L"ImmGetContext Method:\n";
+    if (!hwndForeground) {
+        output << L"  ERROR: No foreground window\n";
+    } else {
         HIMC himc = ImmGetContext(hwndForeground);
-        if (himc) {
+        if (!himc) {
+            output << L"  ERROR: ImmGetContext returned NULL\n";
+            output << L"  (This is normal for TSF-based IMEs)\n";
+        } else {
             DWORD convMode = 0, sentMode = 0;
             if (ImmGetConversionStatus(himc, &convMode, &sentMode)) {
-                output << L"ImmGetConversionStatus:\n";
                 output << L"  Conversion: " << DwordToHex(convMode);
                 if (convMode & IME_CMODE_NATIVE) {
                     output << L" [NATIVE]";
                 }
-                output << L"\n  Sentence:   " << DwordToHex(sentMode) << L"\n\n";
+                output << L"\n  Sentence:   " << DwordToHex(sentMode) << L"\n";
+            } else {
+                output << L"  ERROR: ImmGetConversionStatus failed\n";
             }
             ImmReleaseContext(hwndForeground, himc);
         }
     }
+    output << L"\n";
 
     // Detection results
     output << L"Detection:\n";
-    output << L"  Changjie Active:  " << (IsChangjieIMEActive() ? L"YES" : L"NO") << L"\n";
-    output << L"  Chinese Mode:     " << (IsChangjieChineseModeActive() ? L"YES" : L"NO") << L"\n";
-    output << L"  English Mode:     " << (IsChangjieEnglishModeActive() ? L"YES" : L"NO") << L"\n";
+    output << L"  Changjie Active:   " << (IsChangjieIMEActive() ? L"YES" : L"NO") << L"\n";
+    output << L"  Chinese Mode:      " << (IsChangjieChineseModeActive() ? L"YES" : L"NO") << L"\n";
+    output << L"  English Mode:      " << (IsChangjieEnglishModeActive() ? L"YES" : L"NO") << L"\n";
     output << L"  English US Active: " << (IsEnglishUSActive() ? L"YES" : L"NO") << L"\n";
 
     CoUninitialize();
