@@ -30,6 +30,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         hr = SetChineseMode();
         if (FAILED(hr))
             exitCode = 1;
+
+        // Verify that Chinese mode was actually activated.
+        // For apps that don't allow Chinese input (e.g., password fields),
+        // attempting to set Chinese mode will fail, leaving the IME in
+        // Changjie English mode. In such cases, switch back to English US.
+        Sleep(PROFILE_SWITCH_DELAY_MS); // Brief delay to allow mode change to take effect.
+        if (!IsChangjieChineseModeActive()) {
+            // Chinese mode activation failed — revert to English US.
+            hr = ActivateEnglishUS();
+            if (FAILED(hr))
+                exitCode = 1;
+        }
     }
 
     CoUninitialize();
