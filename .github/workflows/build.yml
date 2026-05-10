@@ -17,6 +17,9 @@ permissions:
 jobs:
   build:
     runs-on: windows-latest
+    strategy:
+      matrix:
+        arch: [x64, ARM64]
 
     steps:
       - name: Checkout
@@ -24,11 +27,11 @@ jobs:
 
       # Visual Studio 2022 with MSVC is pre-installed on windows-latest.
       # We use the x64 native tools environment for a 64-bit build.
-      - name: Configure (Release, x64)
+      - name: Configure (Release, ${{ matrix.arch }})
         run: |
           cmake -B build `
                 -G "Visual Studio 17 2022" `
-                -A x64 `
+                -A ${{ matrix.arch }} `
                 -DCMAKE_BUILD_TYPE=Release
         shell: pwsh
 
@@ -47,7 +50,7 @@ jobs:
         shell: pwsh
         run: |
           $exes = Get-ChildItem -Path build\Release -Filter "*.exe" | Select-Object -ExpandProperty FullName
-          Compress-Archive -Path $exes -DestinationPath changjie-ime-tools.zip
+          Compress-Archive -Path $exes -DestinationPath changjie-ime-tools-${{ matrix.arch }}.zip
 
       # -----------------------------------------------------------------------
       # Upload the archive as a workflow artifact (available on every run)
@@ -55,8 +58,8 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: changjie-ime-tools
-          path: changjie-ime-tools.zip
+          name: changjie-ime-tools-${{ matrix.arch }}
+          path: changjie-ime-tools-${{ matrix.arch }}.zip
           if-no-files-found: error
 
       # -----------------------------------------------------------------------
@@ -70,6 +73,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $tag = "${{ github.ref_name }}"
+          $arch = "${{ matrix.arch }}"
           $files = @(
             "build\Release\switch-to-changjie.exe",
             "build\Release\changjie-chinese-mode.exe",
@@ -78,9 +82,15 @@ jobs:
             "build\Release\switch-to-changjie-chinese.exe",
             "build\Release\toggle-changjie-english.exe",
             "build\Release\list-ime-profiles.exe",
-            "changjie-ime-tools.zip"
+            "changjie-ime-tools-$arch.zip"
           )
-          gh release create $tag `
-            --title "Release $tag" `
-            --generate-notes `
-            @files
+
+          # Create release on first run, append assets on subsequent runs
+          if ((gh release view $tag 2>$null) -eq $null) {
+            gh release create $tag `
+              --title "Release $tag" `
+              --generate-notes `
+              @files
+          } else {
+            gh release upload $tag @files
+          }
