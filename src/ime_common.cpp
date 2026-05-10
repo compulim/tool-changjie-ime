@@ -195,14 +195,12 @@ HRESULT ActivateEnglishUS()
 
     pProfileMgr->Release();
 
-    /*
     // Send WM_INPUTLANGCHANGEREQUEST to ensure immediate effect
     HWND hwndForeground = GetForegroundWindow();
     if (hwndForeground) {
         // Post the message asynchronously to avoid blocking
         PostMessageW(hwndForeground, WM_INPUTLANGCHANGEREQUEST, 0, reinterpret_cast<LPARAM>(hklEnUS));
     }
-    */
 
     return hr;
 }
