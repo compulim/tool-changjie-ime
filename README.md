@@ -1,5 +1,8 @@
 # tool-changjie-ime
 
+> [!TIP]
+> If you like this repo, star us and let us know.
+
 ## Background
 
 Windows IME has a feature enabling "typing English while in a native keyboard." This is not the same experience as English US or other similar keyboards.
