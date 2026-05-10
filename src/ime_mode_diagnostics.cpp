@@ -176,6 +176,22 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
                             pButton->Release();
                         }
 
+                        // Try to get system device type information
+                        ITfSystemDeviceTypeLangBarItem* pDeviceType = nullptr;
+                        if (SUCCEEDED(pItem->QueryInterface(IID_ITfSystemDeviceTypeLangBarItem,
+                                                           reinterpret_cast<void**>(&pDeviceType)))) {
+                            DWORD deviceType = 0;
+                            if (SUCCEEDED(pDeviceType->GetIconMode(&deviceType))) {
+                                output << L"    Device Type: 0x" << std::hex << deviceType << std::dec;
+                                // Common device types from TfSystDevTyp enum
+                                if (deviceType == 0) output << L" (Keyboard)";
+                                else if (deviceType == 1) output << L" (Speech)";
+                                else if (deviceType == 2) output << L" (Handwriting)";
+                                output << L"\n";
+                            }
+                            pDeviceType->Release();
+                        }
+
                         SysFreeString(tooltip);
                         itemCount++;
                     }
