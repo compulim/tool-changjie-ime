@@ -201,12 +201,10 @@ HRESULT ActivateEnglishUS()
         // Post the message asynchronously to avoid blocking
         PostMessageW(hwndForeground, WM_INPUTLANGCHANGEREQUEST, 0, reinterpret_cast<LPARAM>(hklEnUS));
     } else {
-        // When no foreground window (e.g., desktop has focus), broadcast to the shell window
-        // The shell window (typically explorer.exe) handles the system tray and taskbar
-        HWND hwndShell = GetShellWindow();
-        if (hwndShell) {
-            PostMessageW(hwndShell, WM_INPUTLANGCHANGEREQUEST, 0, reinterpret_cast<LPARAM>(hklEnUS));
-        }
+        // When no foreground window (e.g., desktop has focus), use ActivateKeyboardLayout
+        // to directly activate the keyboard layout for the current thread
+        // KLF_SETFORPROCESS flag makes it apply to the entire process
+        ActivateKeyboardLayout(hklEnUS, KLF_SETFORPROCESS);
     }
 
     return hr;
