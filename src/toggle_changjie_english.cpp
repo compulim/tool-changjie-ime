@@ -38,12 +38,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR lpCmdLine, int)
         // Changjie English mode. In such cases, switch back to English US.
         // We retry the check multiple times with delays to account for async processing.
         bool chineseModeActivated = false;
-        for (int attempt = 0; attempt < 5; ++attempt) {
-            Sleep(PROFILE_SWITCH_DELAY_MS);
+        for (int attempt = 0; attempt < 10; ++attempt) {
             if (IsChangjieChineseModeActive()) {
                 chineseModeActivated = true;
                 break;
             }
+            Sleep(PROFILE_SWITCH_DELAY_MS);
         }
 
         if (!chineseModeActivated) {
