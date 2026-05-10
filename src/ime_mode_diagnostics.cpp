@@ -5,6 +5,7 @@
 // Outputs to a message box since this is a WIN32 application.
 
 #include "ime_common.h"
+#include <ctfutb.h>
 #include <sstream>
 #include <iomanip>
 
@@ -174,6 +175,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
                                 SysFreeString(text);
                             }
                             pButton->Release();
+                        }
+
+                        // Try to get system text information
+                        ITfSystemLangBarItemText* pText = nullptr;
+                        if (SUCCEEDED(pItem->QueryInterface(IID_ITfSystemLangBarItemText,
+                                                           reinterpret_cast<void**>(&pText)))) {
+                            BSTR itemText = nullptr;
+                            if (SUCCEEDED(pText->GetItemText(&itemText)) && itemText) {
+                                output << L"    Item Text: " << itemText << L"\n";
+                                SysFreeString(itemText);
+                            }
+                            pText->Release();
                         }
 
                         // Try to get system device type information
