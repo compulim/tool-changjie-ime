@@ -52,7 +52,7 @@ static const wchar_t* LAYOUT_ID_ENUS = L"00000409";
 // WM_IME_CONTROL to the foreground window.  The profile switch is
 // asynchronous; the brief delay lets the target application process the
 // WM_INPUTLANGCHANGE notification before we set the conversion mode.
-static const DWORD PROFILE_SWITCH_DELAY_MS = 50;
+static const DWORD PROFILE_SWITCH_DELAY_MS = 20;
 
 // Parse the delay value from command-line arguments. If a numeric argument
 // is provided, use it; otherwise, return the default PROFILE_SWITCH_DELAY_MS.
