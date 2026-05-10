@@ -63,8 +63,25 @@ bool IsEnglishUSActive()
 {
     TF_INPUTPROCESSORPROFILE profile = {};
     if (FAILED(GetActiveProfile(&profile))) return false;
-    return (profile.dwProfileType == TF_PROFILETYPE_KEYBOARDLAYOUT)
+
+    // Check TSF profile type and language ID
+    bool tsfMatch = (profile.dwProfileType == TF_PROFILETYPE_KEYBOARDLAYOUT)
         && (profile.langid == LANGID_EnglishUS);
+
+    // Also verify using the foreground window's keyboard layout
+    HWND hwnd = GetForegroundWindow();
+    if (hwnd) {
+        DWORD threadId = GetWindowThreadProcessId(hwnd, nullptr);
+        HKL currentHKL = GetKeyboardLayout(threadId);
+        LANGID currentLangID = LOWORD(currentHKL);
+        bool hklMatch = (currentLangID == LANGID_EnglishUS);
+
+        // Both checks should agree for a true positive
+        return tsfMatch && hklMatch;
+    }
+
+    // If we can't get foreground window, fall back to TSF check only
+    return tsfMatch;
 }
 
 bool IsChangjieChineseModeActive()
