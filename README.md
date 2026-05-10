@@ -17,6 +17,7 @@ Each utility compiles to a single, self-contained EXE with no console window.  T
 | `switch-to-changjie-chinese.exe` | Switch to ChangJie IME (if needed) **and** set Chinese input mode. Accepts an optional delay argument (in milliseconds, default: 50). |
 | `toggle-changjie-english.exe` | Toggle between ChangJie IME and English (US) keyboard. If ChangJie is active (in either Chinese or English mode), switches to English (US). Otherwise, switches to ChangJie with Chinese mode activated. Accepts an optional delay argument (in milliseconds, default: 50). |
 | `list-ime-profiles.exe` | **Diagnostic tool:** Display all available IME profiles in a message box. Use this to find the correct GUIDs for your system. |
+| `ime-mode-diagnostics.exe` | **Diagnostic tool:** Display detailed information about the current IME state, including keyboard layout, TSF profile, and conversion mode flags. Use this to diagnose mode detection issues. |
 
 ---
 
