@@ -36,11 +36,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR lpCmdLine, int)
     // We retry the check multiple times with delays to account for async processing.
     bool chineseModeActivated = false;
     for (int attempt = 0; attempt < 10; ++attempt) {
+        Sleep(PROFILE_SWITCH_DELAY_MS);
         if (IsChangjieChineseModeActive()) {
             chineseModeActivated = true;
             break;
         }
-        Sleep(PROFILE_SWITCH_DELAY_MS);
     }
 
     if (!chineseModeActivated) {
