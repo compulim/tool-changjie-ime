@@ -1,5 +1,24 @@
 # tool-changjie-ime
 
+## Background
+
+Windows IME has a feature enabling "typing English while in a native keyboard." This is not the same experience as English US or other similar keyboards.
+
+The differences in UX is causing a lot of annoyance. For example, <kbd>CTRL</kbd> + <kbd>SPACEBAR</kbd> would insert a space when using English US. However, when using Changjie IME English mode, it will not insert a space. User need to change to English US keyboard.
+
+What's worse, as Windows Text Services Framework allow text box to be scoped to English. Switching to the English mode becomes more a frequent issue.
+
+This set of tools will allow you to programmatically switch to English US or Changjie. They are made to run using shortcut key manager such as PowerToys Keyboard Manager.
+
+- `changjie-english-watcher` will lock Changjie English mode out by switching to English US
+   - Should run on startup
+- `switch-to-changjie-chinese` will switch to Changjie and Chinese mode in a single tap
+   - Should set to <kbd>CTRL</kbd> + <kbd>SPACEBAR</kbd>
+
+When using these two tools, Changjie English mode will be more-or-less disabled.
+
+## Introduction
+
 A set of small Windows utilities for controlling the **Microsoft ChangJie (倉頡) IME** and the **English (US) keyboard layout** through the [Text Services Framework (TSF)](https://learn.microsoft.com/en-us/windows/win32/tsf/text-services-framework) COM interfaces and the IMM32 API.
 
 Each utility compiles to a single, self-contained EXE with no console window.  They are designed to be bound to hotkeys (e.g. with AutoHotKey, PowerToys, or Windows keyboard shortcuts) and return almost instantly.
