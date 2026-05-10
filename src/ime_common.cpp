@@ -203,14 +203,6 @@ HRESULT ActivateEnglishUS()
         TF_IPPMF_FORSESSION);
 
     pProfileMgr->Release();
-
-    // Also send WM_INPUTLANGCHANGEREQUEST to the foreground window to ensure immediate effect
-    HWND hwndForeground = GetForegroundWindow();
-    if (hwndForeground) {
-        // Post the message asynchronously to avoid blocking
-        PostMessageW(hwndForeground, WM_INPUTLANGCHANGEREQUEST, 0, reinterpret_cast<LPARAM>(hklEnUS));
-    }
-
     return hr;
 }
 
