@@ -74,6 +74,12 @@ bool IsEnglishUSActive();
 // Return true if the ChangJie IME is active AND in Chinese (native) input mode.
 bool IsChangjieChineseModeActive();
 
+// Get conversion mode using ImmGetConversionStatus (alternative to WM_IME_CONTROL).
+DWORD GetConversionModeViaImmContext();
+
+// Check if the IME is open (active for input).
+BOOL GetImeOpenStatus();
+
 // ---------------------------------------------------------------------------
 // Profile activation (use ITfInputProcessorProfileMgr via COM)
 // ---------------------------------------------------------------------------
