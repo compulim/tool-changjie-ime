@@ -199,13 +199,9 @@ void EnumerateLangBarItems(std::wstringstream& output)
         // Try to get bitmap info
         ITfLangBarItemBitmap* pBitmap = nullptr;
         if (SUCCEEDED(pItem->QueryInterface(IID_ITfLangBarItemBitmap, (void**)&pBitmap))) {
-            HBITMAP hBitmap = nullptr;
             SIZE size = {};
-            if (SUCCEEDED(pBitmap->GetPreferredSize(&size, &hBitmap)) && hBitmap) {
-                output << L"  Bitmap: 0x" << std::hex
-                       << reinterpret_cast<UINT_PTR>(hBitmap) << std::dec
-                       << L" (Size: " << size.cx << L"x" << size.cy << L")\n";
-                DeleteObject(hBitmap);
+            if (SUCCEEDED(pBitmap->GetPreferredSize(nullptr, &size))) {
+                output << L"  Bitmap Preferred Size: " << size.cx << L"x" << size.cy << L"\n";
             }
             pBitmap->Release();
         }
