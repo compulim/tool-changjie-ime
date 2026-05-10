@@ -5,7 +5,8 @@
 // it automatically switches to the English (US) keyboard layout.
 //
 // Features:
-// - Configurable check interval (default: 1000ms, can be set via command-line)
+// - Configurable check interval via system tray menu (100ms, 200ms, or 500ms; default: 200ms)
+// - Can also be set via command-line argument for custom intervals
 // - System tray icon with Exit menu
 // - Single-instance enforcement (prevents multiple copies from running)
 // - Uses icon from %SystemRoot%\SYSTEM32\InputMethod\Shared\ResourceDll.dll index 3
@@ -30,10 +31,18 @@ static const UINT WM_TRAYICON = WM_USER + 1;
 static const UINT_PTR TIMER_ID = 1;
 
 // Menu command IDs
-static const UINT ID_EXIT = 1001;
+static const UINT ID_INTERVAL_100MS = 1001;
+static const UINT ID_INTERVAL_200MS = 1002;
+static const UINT ID_INTERVAL_500MS = 1003;
+static const UINT ID_EXIT = 1004;
+
+// Available check intervals in milliseconds
+static const DWORD INTERVAL_100MS = 100;
+static const DWORD INTERVAL_200MS = 200;
+static const DWORD INTERVAL_500MS = 500;
 
 // Default check interval in milliseconds
-static const DWORD DEFAULT_CHECK_INTERVAL_MS = 1000;
+static const DWORD DEFAULT_CHECK_INTERVAL_MS = 200;
 
 // Global variables
 static HINSTANCE g_hInstance = nullptr;
@@ -124,6 +133,21 @@ void ShowTrayMenu(HWND hwnd)
     HMENU hMenu = CreatePopupMenu();
     if (!hMenu) return;
 
+    // Add interval selection submenu
+    HMENU hIntervalMenu = CreatePopupMenu();
+    if (hIntervalMenu) {
+        UINT flags100 = MF_STRING | (g_checkIntervalMs == INTERVAL_100MS ? MF_CHECKED : MF_UNCHECKED);
+        UINT flags200 = MF_STRING | (g_checkIntervalMs == INTERVAL_200MS ? MF_CHECKED : MF_UNCHECKED);
+        UINT flags500 = MF_STRING | (g_checkIntervalMs == INTERVAL_500MS ? MF_CHECKED : MF_UNCHECKED);
+
+        AppendMenuW(hIntervalMenu, flags100, ID_INTERVAL_100MS, L"100 ms");
+        AppendMenuW(hIntervalMenu, flags200, ID_INTERVAL_200MS, L"200 ms");
+        AppendMenuW(hIntervalMenu, flags500, ID_INTERVAL_500MS, L"500 ms");
+
+        AppendMenuW(hMenu, MF_STRING | MF_POPUP, (UINT_PTR)hIntervalMenu, L"Check Interval");
+    }
+
+    AppendMenuW(hMenu, MF_SEPARATOR, 0, nullptr);
     AppendMenuW(hMenu, MF_STRING, ID_EXIT, L"Exit");
 
     // Required for proper menu behavior with tray icons
@@ -209,8 +233,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_COMMAND:
-            if (LOWORD(wParam) == ID_EXIT) {
-                PostQuitMessage(0);
+            switch (LOWORD(wParam)) {
+                case ID_INTERVAL_100MS:
+                    g_checkIntervalMs = INTERVAL_100MS;
+                    KillTimer(hwnd, TIMER_ID);
+                    SetTimer(hwnd, TIMER_ID, g_checkIntervalMs, nullptr);
+                    break;
+                case ID_INTERVAL_200MS:
+                    g_checkIntervalMs = INTERVAL_200MS;
+                    KillTimer(hwnd, TIMER_ID);
+                    SetTimer(hwnd, TIMER_ID, g_checkIntervalMs, nullptr);
+                    break;
+                case ID_INTERVAL_500MS:
+                    g_checkIntervalMs = INTERVAL_500MS;
+                    KillTimer(hwnd, TIMER_ID);
+                    SetTimer(hwnd, TIMER_ID, g_checkIntervalMs, nullptr);
+                    break;
+                case ID_EXIT:
+                    PostQuitMessage(0);
+                    break;
             }
             break;
 
