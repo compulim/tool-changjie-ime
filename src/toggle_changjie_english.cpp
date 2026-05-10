@@ -6,7 +6,7 @@
 
 #include "ime_common.h"
 
-int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
+int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR lpCmdLine, int)
 {
     HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
     if (FAILED(hr))
@@ -26,7 +26,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             CoUninitialize();
             return 1;
         }
-        Sleep(PROFILE_SWITCH_DELAY_MS); // Allow the foreground app to process the profile switch.
+        DWORD delay = ParseDelayArgument(lpCmdLine);
+        Sleep(delay); // Allow the foreground app to process the profile switch.
         hr = SetChineseMode();
         if (FAILED(hr))
             exitCode = 1;

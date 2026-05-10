@@ -6,7 +6,7 @@
 
 #include "ime_common.h"
 
-int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
+int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR lpCmdLine, int)
 {
     HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
     if (FAILED(hr))
@@ -21,7 +21,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         }
         // Give the foreground application a moment to process the profile
         // change before we attempt to set the conversion mode.
-        Sleep(PROFILE_SWITCH_DELAY_MS);
+        DWORD delay = ParseDelayArgument(lpCmdLine);
+        Sleep(delay);
     }
 
     hr = SetChineseMode();

@@ -14,9 +14,28 @@ Each utility compiles to a single, self-contained EXE with no console window.  T
 | `changjie-chinese-mode.exe` | If ChangJie IME is active, switch to **Chinese** (native) input mode. |
 | `changjie-english-mode.exe` | If ChangJie IME is active, switch to **English** (alphanumeric) input mode. |
 | `switch-to-english-us.exe` | Switch to the English (US) keyboard layout if it is not already active. |
-| `switch-to-changjie-chinese.exe` | Switch to ChangJie IME (if needed) **and** set Chinese input mode. |
-| `toggle-changjie-english.exe` | Toggle between ChangJie IME and English (US) keyboard. If ChangJie is active (in either Chinese or English mode), switches to English (US). Otherwise, switches to ChangJie with Chinese mode activated. |
+| `switch-to-changjie-chinese.exe` | Switch to ChangJie IME (if needed) **and** set Chinese input mode. Accepts an optional delay argument (in milliseconds, default: 50). |
+| `toggle-changjie-english.exe` | Toggle between ChangJie IME and English (US) keyboard. If ChangJie is active (in either Chinese or English mode), switches to English (US). Otherwise, switches to ChangJie with Chinese mode activated. Accepts an optional delay argument (in milliseconds, default: 50). |
 | `list-ime-profiles.exe` | **Diagnostic tool:** Display all available IME profiles in a message box. Use this to find the correct GUIDs for your system. |
+
+---
+
+## Usage
+
+Most tools can be run without arguments. Some tools accept an optional delay argument (in milliseconds) to control the wait time after switching profiles:
+
+```powershell
+# Run with default delay (50ms)
+.\switch-to-changjie-chinese.exe
+
+# Run with custom delay (e.g., 100ms for slower applications)
+.\switch-to-changjie-chinese.exe 100
+
+# Run with no delay
+.\toggle-changjie-english.exe 0
+```
+
+The delay is used after activating a profile to give the foreground application time to process the `WM_INPUTLANGCHANGE` notification before setting the conversion mode.
 
 ---
 
