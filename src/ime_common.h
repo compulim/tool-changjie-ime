@@ -67,6 +67,9 @@ bool IsChangjieIMEActive();
 // Return true if an English (US) keyboard layout is the active input source.
 bool IsEnglishUSActive();
 
+// Return true if the ChangJie IME is active AND in Chinese (native) input mode.
+bool IsChangjieChineseModeActive();
+
 // ---------------------------------------------------------------------------
 // Profile activation (use ITfInputProcessorProfileMgr via COM)
 // ---------------------------------------------------------------------------

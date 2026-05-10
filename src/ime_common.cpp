@@ -67,6 +67,14 @@ bool IsEnglishUSActive()
         && (profile.langid == LANGID_EnglishUS);
 }
 
+bool IsChangjieChineseModeActive()
+{
+    if (!IsChangjieIMEActive()) return false;
+    DWORD mode = GetCurrentConversionMode();
+    if (mode == static_cast<DWORD>(-1)) return false;
+    return (mode & IME_CMODE_NATIVE) != 0;
+}
+
 // ---------------------------------------------------------------------------
 // Profile activation
 // ---------------------------------------------------------------------------
@@ -98,7 +106,8 @@ HRESULT ActivateEnglishUS()
 {
     // Resolve the HKL for the US English keyboard layout.
     // "00000409" is the standard layout identifier for en-US.
-    HKL hklEnUS = LoadKeyboardLayoutW(LAYOUT_ID_ENUS, 0);
+    // KLF_ACTIVATE flag is needed to actually activate the layout.
+    HKL hklEnUS = LoadKeyboardLayoutW(LAYOUT_ID_ENUS, KLF_ACTIVATE);
     if (!hklEnUS) {
         // Fallback to the well-known HKL value for en-US.
         hklEnUS = reinterpret_cast<HKL>(static_cast<ULONG_PTR>(0x04090409));
