@@ -90,8 +90,9 @@ bool IsChangjieChineseModeActive()
     // Try to get conversion mode via WM_IME_CONTROL first (primary method)
     DWORD mode = GetCurrentConversionMode();
 
-    // If that fails or returns an unexpected value, try the fallback method
-    if (mode == static_cast<DWORD>(-1) || mode == 0) {
+    // If that fails, try the fallback method
+    // Note: mode == 0 is valid (means English/alphanumeric mode with no flags)
+    if (mode == static_cast<DWORD>(-1)) {
         mode = GetConversionModeViaImmContext();
     }
 
@@ -109,8 +110,9 @@ bool IsChangjieEnglishModeActive()
     // Try to get conversion mode via WM_IME_CONTROL first (primary method)
     DWORD mode = GetCurrentConversionMode();
 
-    // If that fails or returns an unexpected value, try the fallback method
-    if (mode == static_cast<DWORD>(-1) || mode == 0) {
+    // If that fails, try the fallback method
+    // Note: mode == 0 is valid (means English/alphanumeric mode with no flags)
+    if (mode == static_cast<DWORD>(-1)) {
         mode = GetConversionModeViaImmContext();
     }
 
