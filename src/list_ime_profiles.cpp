@@ -7,7 +7,6 @@
 #include "ime_common.h"
 #include <sstream>
 #include <vector>
-#include <iomanip>
 
 // Helper to convert GUID to string
 std::wstring GuidToString(const GUID& guid)
@@ -55,11 +54,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         TF_LANGUAGEPROFILE profile;
         ULONG fetched = 0;
         while (pEnum->Next(1, &profile, &fetched) == S_OK) {
-            output << L"\n  Type: " << (profile.dwProfileType == TF_PROFILETYPE_INPUTPROCESSOR ? L"Input Processor" : L"Keyboard Layout") << L"\n";
-            output << L"  CLSID: " << GuidToString(profile.clsid) << L"\n";
+            output << L"\n  CLSID: " << GuidToString(profile.clsid) << L"\n";
             output << L"  Profile GUID: " << GuidToString(profile.guidProfile) << L"\n";
-            output << L"  HKL: 0x" << std::hex << std::setw(8) << std::setfill(L'0')
-                   << reinterpret_cast<ULONG_PTR>(profile.hkl) << std::dec << L"\n";
 
             // Try to get the description
             BSTR bstrDesc = nullptr;
@@ -85,13 +81,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         ULONG fetched = 0;
         int count = 0;
         while (pEnum->Next(1, &profile, &fetched) == S_OK && count < 3) {
-            if (profile.dwProfileType == TF_PROFILETYPE_KEYBOARDLAYOUT) {
-                output << L"\n  Type: Keyboard Layout\n";
-                output << L"  CLSID: " << GuidToString(profile.clsid) << L"\n";
-                output << L"  HKL: 0x" << std::hex << std::setw(8) << std::setfill(L'0')
-                       << reinterpret_cast<ULONG_PTR>(profile.hkl) << std::dec << L"\n";
-                count++;
+            output << L"\n  CLSID: " << GuidToString(profile.clsid) << L"\n";
+            output << L"  Profile GUID: " << GuidToString(profile.guidProfile) << L"\n";
+
+            // Try to get the description
+            BSTR bstrDesc = nullptr;
+            if (SUCCEEDED(pProfiles->GetLanguageProfileDescription(
+                profile.clsid, profile.langid, profile.guidProfile, &bstrDesc))) {
+                if (bstrDesc) {
+                    output << L"  Description: " << bstrDesc << L"\n";
+                    SysFreeString(bstrDesc);
+                }
             }
+            count++;
         }
         pEnum->Release();
     }
