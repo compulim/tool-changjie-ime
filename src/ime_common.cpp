@@ -87,11 +87,6 @@ bool IsChangjieChineseModeActive()
 {
     if (!IsChangjieIMEActive()) return false;
 
-    // When the IME is in English mode (not open), it's not in Chinese mode
-    // The open status indicates whether the IME is actively accepting native input
-    BOOL imeOpen = GetImeOpenStatus();
-    if (!imeOpen) return false;
-
     // Try to get conversion mode via WM_IME_CONTROL first (primary method)
     DWORD mode = GetCurrentConversionMode();
 
@@ -103,16 +98,13 @@ bool IsChangjieChineseModeActive()
     if (mode == static_cast<DWORD>(-1)) return false;
 
     // Check if IME_CMODE_NATIVE is set (indicates Chinese character input mode)
+    // We don't check the IME open status because it may not be reliable on all systems
     return (mode & IME_CMODE_NATIVE) != 0;
 }
 
 bool IsChangjieEnglishModeActive()
 {
     if (!IsChangjieIMEActive()) return false;
-
-    // When the IME is not open, it's in English mode
-    BOOL imeOpen = GetImeOpenStatus();
-    if (!imeOpen) return true;
 
     // Try to get conversion mode via WM_IME_CONTROL first (primary method)
     DWORD mode = GetCurrentConversionMode();
@@ -125,6 +117,7 @@ bool IsChangjieEnglishModeActive()
     if (mode == static_cast<DWORD>(-1)) return false;
 
     // Check if IME_CMODE_NATIVE is NOT set (indicates English/alphanumeric mode)
+    // We don't check the IME open status because it may not be reliable on all systems
     return (mode & IME_CMODE_NATIVE) == 0;
 }
 

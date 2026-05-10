@@ -22,6 +22,7 @@
 #define WM_TRAYICON (WM_USER + 1)
 #define ID_TRAY_ICON 1
 #define ID_TRAY_EXIT 2001
+#define WM_CHECK_IME (WM_USER + 2)
 
 // Global variables
 HINSTANCE g_hInstance = nullptr;
@@ -29,6 +30,7 @@ HWND g_hwndMain = nullptr;
 NOTIFYICONDATAW g_nid = {};
 UINT_PTR g_timerId = 0;
 DWORD g_checkIntervalMs = 1000; // Default: check every 1 second
+HANDLE g_hMutex = nullptr;
 
 // Forward declarations
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -40,6 +42,19 @@ void CheckAndSwitchIME();
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int)
 {
     g_hInstance = hInstance;
+
+    // Create a named mutex to prevent multiple instances
+    g_hMutex = CreateMutexW(nullptr, TRUE, L"ChangjieEnglishWatcher_SingleInstance");
+    if (GetLastError() == ERROR_ALREADY_EXISTS) {
+        MessageBoxW(nullptr,
+            L"Changjie English Watcher is already running.\n\nOnly one instance can run at a time.",
+            L"Already Running",
+            MB_OK | MB_ICONINFORMATION);
+        if (g_hMutex) {
+            CloseHandle(g_hMutex);
+        }
+        return 1;
+    }
 
     // Parse command-line argument for check interval
     if (lpCmdLine && *lpCmdLine) {
@@ -62,6 +77,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int)
     HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
     if (FAILED(hr)) {
         MessageBoxW(nullptr, L"Failed to initialize COM", L"Error", MB_OK | MB_ICONERROR);
+        if (g_hMutex) {
+            ReleaseMutex(g_hMutex);
+            CloseHandle(g_hMutex);
+        }
         return 1;
     }
 
@@ -74,6 +93,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int)
 
     if (!RegisterClassExW(&wc)) {
         CoUninitialize();
+        if (g_hMutex) {
+            ReleaseMutex(g_hMutex);
+            CloseHandle(g_hMutex);
+        }
         return 1;
     }
 
@@ -82,7 +105,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int)
         0,
         L"ChangjieEnglishWatcherClass",
         L"Changjie English Watcher",
-        0,
+        WS_OVERLAPPED,  // Use WS_OVERLAPPED instead of 0 to ensure proper message handling
         0, 0, 0, 0,
         nullptr,
         nullptr,
@@ -92,6 +115,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int)
 
     if (!g_hwndMain) {
         CoUninitialize();
+        if (g_hMutex) {
+            ReleaseMutex(g_hMutex);
+            CloseHandle(g_hMutex);
+        }
         return 1;
     }
 
@@ -100,6 +127,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int)
 
     // Start the timer for periodic checking
     g_timerId = SetTimer(g_hwndMain, 1, g_checkIntervalMs, nullptr);
+    if (!g_timerId) {
+        MessageBoxW(nullptr, L"Failed to create timer", L"Error", MB_OK | MB_ICONERROR);
+        RemoveTrayIcon();
+        DestroyWindow(g_hwndMain);
+        CoUninitialize();
+        if (g_hMutex) {
+            ReleaseMutex(g_hMutex);
+            CloseHandle(g_hMutex);
+        }
+        return 1;
+    }
 
     // Message loop
     MSG msg;
@@ -114,6 +152,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int)
     }
     RemoveTrayIcon();
     CoUninitialize();
+
+    if (g_hMutex) {
+        ReleaseMutex(g_hMutex);
+        CloseHandle(g_hMutex);
+    }
 
     return static_cast<int>(msg.wParam);
 }
