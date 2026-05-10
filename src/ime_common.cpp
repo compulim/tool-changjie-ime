@@ -204,3 +204,31 @@ HRESULT SetEnglishMode()
     if (mode == static_cast<DWORD>(-1)) return E_FAIL;
     return SetConversionMode(mode & ~static_cast<DWORD>(IME_CMODE_NATIVE));
 }
+
+// ---------------------------------------------------------------------------
+// Command-line argument parsing
+// ---------------------------------------------------------------------------
+
+DWORD ParseDelayArgument(LPSTR lpCmdLine)
+{
+    if (!lpCmdLine || !*lpCmdLine) {
+        return PROFILE_SWITCH_DELAY_MS;
+    }
+
+    // Skip leading whitespace
+    while (*lpCmdLine == ' ' || *lpCmdLine == '\t') {
+        lpCmdLine++;
+    }
+
+    // Try to parse as a number
+    char* endPtr = nullptr;
+    long value = strtol(lpCmdLine, &endPtr, 10);
+
+    // If parsing succeeded and the value is valid, use it
+    if (endPtr != lpCmdLine && value >= 0 && value <= 10000) {
+        return static_cast<DWORD>(value);
+    }
+
+    // Otherwise, return the default
+    return PROFILE_SWITCH_DELAY_MS;
+}

@@ -54,6 +54,10 @@ static const wchar_t* LAYOUT_ID_ENUS = L"00000409";
 // WM_INPUTLANGCHANGE notification before we set the conversion mode.
 static const DWORD PROFILE_SWITCH_DELAY_MS = 50;
 
+// Parse the delay value from command-line arguments. If a numeric argument
+// is provided, use it; otherwise, return the default PROFILE_SWITCH_DELAY_MS.
+DWORD ParseDelayArgument(LPSTR lpCmdLine);
+
 // ---------------------------------------------------------------------------
 // Profile queries (use ITfInputProcessorProfileMgr via COM)
 // ---------------------------------------------------------------------------
