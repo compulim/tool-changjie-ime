@@ -60,6 +60,14 @@ bool IsEnglishUSActive()
 
 HRESULT ActivateChangjieIME()
 {
+    // Load the Traditional Chinese (Taiwan) HKL for the ChangJie IME.
+    // The layout identifier for zh-TW is 0x0404.
+    HKL hklChangjie = LoadKeyboardLayoutW(L"E0080404", 0);
+    if (!hklChangjie) {
+        // Fallback: try the standard zh-TW HKL.
+        hklChangjie = reinterpret_cast<HKL>(static_cast<ULONG_PTR>(0xE0080404));
+    }
+
     ITfInputProcessorProfileMgr* pProfileMgr = nullptr;
     HRESULT hr = CoCreateInstance(
         CLSID_TF_InputProcessorProfiles,
@@ -74,7 +82,7 @@ HRESULT ActivateChangjieIME()
         LANGID_TraditionalChinese,
         CLSID_ChangjieIME,
         GUID_ChangjieProfile,
-        nullptr,
+        hklChangjie,
         TF_IPPMF_FORSESSION);
 
     pProfileMgr->Release();
