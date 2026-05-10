@@ -175,7 +175,6 @@ HRESULT ActivateEnglishUS()
         hklEnUS = reinterpret_cast<HKL>(static_cast<ULONG_PTR>(0x04090409));
     }
 
-    // Use TSF to activate the profile session-wide first
     ITfInputProcessorProfileMgr* pProfileMgr = nullptr;
     HRESULT hr = CoCreateInstance(
         CLSID_TF_InputProcessorProfiles,
@@ -185,6 +184,23 @@ HRESULT ActivateEnglishUS()
         reinterpret_cast<void**>(&pProfileMgr));
     if (FAILED(hr)) return hr;
 
+    // First, try to deactivate the current profile (especially Changjie IME)
+    // This ensures a clean transition when switching from Changjie to English US
+    TF_INPUTPROCESSORPROFILE currentProfile = {};
+    if (SUCCEEDED(pProfileMgr->GetActiveProfile(GUID_TFCAT_TIP_KEYBOARD, &currentProfile))) {
+        if (currentProfile.dwProfileType == TF_PROFILETYPE_INPUTPROCESSOR) {
+            // Deactivate the current input processor profile
+            pProfileMgr->DeactivateProfile(
+                TF_PROFILETYPE_INPUTPROCESSOR,
+                currentProfile.langid,
+                currentProfile.clsid,
+                currentProfile.guidProfile,
+                nullptr,
+                TF_IPPMF_FORSESSION);
+        }
+    }
+
+    // Now activate the English US keyboard layout
     hr = pProfileMgr->ActivateProfile(
         TF_PROFILETYPE_KEYBOARDLAYOUT,
         LANGID_EnglishUS,
