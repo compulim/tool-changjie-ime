@@ -93,8 +93,6 @@ add_ime_tool(list-ime-profiles src/list_ime_profiles.cpp)
 #   Helps diagnose issues with Changjie mode detection.
 # ---------------------------------------------------------------------------
 add_ime_tool(ime-mode-diagnostics src/ime_mode_diagnostics.cpp)
-# Link msctf for TSF language bar APIs (TF_CreateLangBarItemMgr)
-target_link_libraries(ime-mode-diagnostics PRIVATE msctf)
 
 # ---------------------------------------------------------------------------
 # Tool 7: changjie-english-watcher

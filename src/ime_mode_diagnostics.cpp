@@ -9,6 +9,12 @@
 #include <iomanip>
 #include <ctfutb.h>
 
+// Link msctf for TSF language bar APIs, but only on x64 where the lib is available
+// On ARM64, the functions are delay-loaded from msctf.dll
+#if defined(_M_X64) || defined(_M_IX86)
+#pragma comment(lib, "msctf.lib")
+#endif
+
 // Helper to convert GUID to string
 std::wstring GuidToString(const GUID& guid)
 {
