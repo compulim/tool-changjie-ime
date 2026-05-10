@@ -16,6 +16,7 @@ Each utility compiles to a single, self-contained EXE with no console window.  T
 | `switch-to-english-us.exe` | Switch to the English (US) keyboard layout if it is not already active. |
 | `switch-to-changjie-chinese.exe` | Switch to ChangJie IME (if needed) **and** set Chinese input mode. Accepts an optional delay argument (in milliseconds, default: 50). |
 | `toggle-changjie-english.exe` | Toggle between ChangJie IME and English (US) keyboard. If ChangJie is active (in either Chinese or English mode), switches to English (US). Otherwise, switches to ChangJie with Chinese mode activated. Accepts an optional delay argument (in milliseconds, default: 50). |
+| `changjie-english-watcher.exe` | **Background watcher:** Continuously monitors the ChangJie IME state. When it detects that ChangJie is in English mode, it automatically switches to the English (US) keyboard layout. Runs in the system tray with an Exit menu. Accepts an optional check interval argument (in milliseconds, default: 1000, minimum: 50). |
 | `list-ime-profiles.exe` | **Diagnostic tool:** Display all available IME profiles in a message box. Use this to find the correct GUIDs for your system. |
 | `ime-mode-diagnostics.exe` | **Diagnostic tool:** Display detailed information about the current IME state, including keyboard layout, TSF profile, and conversion mode flags. Use this to diagnose mode detection issues. |
 
@@ -37,6 +38,30 @@ Most tools can be run without arguments. Some tools accept an optional delay arg
 ```
 
 The delay is used after activating a profile to give the foreground application time to process the `WM_INPUTLANGCHANGE` notification before setting the conversion mode.
+
+### Background Watcher
+
+The `changjie-english-watcher.exe` is a special tool that runs continuously in the background:
+
+```powershell
+# Run with default check interval (1000ms = 1 second)
+.\changjie-english-watcher.exe
+
+# Run with faster check interval (e.g., 200ms)
+.\changjie-english-watcher.exe 200
+
+# Run with slower check interval (e.g., 5000ms = 5 seconds)
+.\changjie-english-watcher.exe 5000
+```
+
+**Features:**
+- Runs as a system tray application with a **倉** (Changjie) icon
+- Right-click the tray icon to access the Exit menu
+- Automatically prevents multiple instances from running
+- Monitors ChangJie IME every second (or at the specified interval)
+- When ChangJie is detected in English mode, automatically switches to English (US) keyboard
+
+**Note:** The watcher only switches when ChangJie IME is active but in English/alphanumeric mode. It does not check whether the current keyboard is English US or ChangJie—it only checks if ChangJie is in English mode.
 
 ---
 

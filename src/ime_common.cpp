@@ -95,8 +95,9 @@ bool IsChangjieChineseModeActive()
     // Try to get conversion mode via WM_IME_CONTROL first (primary method)
     DWORD mode = GetCurrentConversionMode();
 
-    // If that fails or returns an unexpected value, try the fallback method
-    if (mode == static_cast<DWORD>(-1) || mode == 0) {
+    // If that fails, try the fallback method
+    // Note: mode == 0 is a valid return value (English mode), not a failure
+    if (mode == static_cast<DWORD>(-1)) {
         mode = GetConversionModeViaImmContext();
     }
 
@@ -104,6 +105,25 @@ bool IsChangjieChineseModeActive()
 
     // Check if IME_CMODE_NATIVE is set (indicates Chinese character input mode)
     return (mode & IME_CMODE_NATIVE) != 0;
+}
+
+bool IsChangjieEnglishModeActive()
+{
+    // Assume ChangJie IME is active - only check conversion mode (CMODE)
+    // Do not check if IME is opened as the open status is always false regardless
+    // Try to get conversion mode via WM_IME_CONTROL first (primary method)
+    DWORD mode = GetCurrentConversionMode();
+
+    // If that fails, try the fallback method
+    // Note: mode == 0 is a valid return value (English mode), not a failure
+    if (mode == static_cast<DWORD>(-1)) {
+        mode = GetConversionModeViaImmContext();
+    }
+
+    if (mode == static_cast<DWORD>(-1)) return false;
+
+    // Check if IME_CMODE_NATIVE is NOT set (indicates English/alphanumeric mode)
+    return (mode & IME_CMODE_NATIVE) == 0;
 }
 
 // ---------------------------------------------------------------------------

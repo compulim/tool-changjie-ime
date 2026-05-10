@@ -95,6 +95,14 @@ add_ime_tool(list-ime-profiles src/list_ime_profiles.cpp)
 add_ime_tool(ime-mode-diagnostics src/ime_mode_diagnostics.cpp)
 
 # ---------------------------------------------------------------------------
+# Tool 7: changjie-english-watcher
+#   Background watcher that monitors ChangJie IME state.
+#   Automatically switches to English (US) when ChangJie is in English mode.
+# ---------------------------------------------------------------------------
+add_ime_tool(changjie-english-watcher src/changjie_english_watcher.cpp)
+target_link_libraries(changjie-english-watcher PRIVATE shell32)
+
+# ---------------------------------------------------------------------------
 # Installation rules (used by the GitHub Actions packaging step)
 # ---------------------------------------------------------------------------
 install(TARGETS
@@ -106,5 +114,6 @@ install(TARGETS
     toggle-changjie-english
     list-ime-profiles
     ime-mode-diagnostics
+    changjie-english-watcher
     RUNTIME DESTINATION bin
 )
