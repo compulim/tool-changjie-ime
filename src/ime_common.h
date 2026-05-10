@@ -8,13 +8,17 @@
 #define _WIN32_WINNT 0x0A00
 #endif
 
-#define WIN32_LEAN_AND_MEAN
-#define UNICODE
-#define _UNICODE
-
 #include <windows.h>
 #include <msctf.h>
 #include <imm.h>
+
+// Define IMM32 WM_IME_CONTROL message constants if not already defined
+#ifndef IMC_GETCONVERSIONMODE
+#define IMC_GETCONVERSIONMODE 1
+#endif
+#ifndef IMC_SETCONVERSIONMODE
+#define IMC_SETCONVERSIONMODE 2
+#endif
 
 #pragma comment(lib, "ole32.lib")
 #pragma comment(lib, "oleaut32.lib")
