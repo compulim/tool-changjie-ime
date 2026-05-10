@@ -4,16 +4,16 @@
 // Microsoft ChangJie IME GUIDs
 // ---------------------------------------------------------------------------
 
-// CLSID: {A76C93D9-5523-4E90-AAFA-4DB112F9AC76}
+// CLSID: {4BDF9F03-C7D3-11D4-B2AB-0080C882687E}
 const CLSID CLSID_ChangjieIME = {
-    0xA76C93D9, 0x5523, 0x4E90,
-    { 0xAA, 0xFA, 0x4D, 0xB1, 0x12, 0xF9, 0xAC, 0x76 }
+    0x4BDF9F03, 0xC7D3, 0x11D4,
+    { 0xB2, 0xAB, 0x00, 0x80, 0xC8, 0x82, 0x68, 0x7E }
 };
 
-// Profile GUID for ChangJie input: {B115690A-EA02-48D5-A231-E3578D2FDF80}
+// Profile GUID for ChangJie input: {531fdebf-9b4c-4a43-a2aa-960e8fcdc732}
 const GUID GUID_ChangjieProfile = {
-    0xB115690A, 0xEA02, 0x48D5,
-    { 0xA2, 0x31, 0xE3, 0x57, 0x8D, 0x2F, 0xDF, 0x80 }
+    0x531FDEBF, 0x9B4C, 0x4A43,
+    { 0xA2, 0xAA, 0x96, 0x0E, 0x8F, 0xCD, 0xC7, 0x32 }
 };
 
 // ---------------------------------------------------------------------------
