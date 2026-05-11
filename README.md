@@ -24,7 +24,7 @@ When using these two tools, Changjie English mode will be more-or-less disabled.
 
 ### `WM_IME_CONTROL` conversion mode inconsistencies
 
-When sending WM_IME_CONTROL while Changjie is active to know about the conversion mode, the value is not trustworthy.
+While Changjie is active, sending WM_IME_CONTROL to retrieve the conversion mode, the value is not trustworthy.
 
 The value should be 0 if it is in English mode. The value should be 1 if it is in Chinese mode (a.k.a. native).
 
