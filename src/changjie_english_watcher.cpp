@@ -5,11 +5,13 @@
 // it automatically switches to the English (US) keyboard layout.
 //
 // Features:
-// - Configurable check interval via system tray menu (100ms, 200ms, or 500ms; default: 200ms)
+// - Configurable check interval via system tray menu (50ms, 100ms, 200ms, or 500ms; default: 200ms)
+// - Configurable consecutive checks via system tray menu (1, 2, or 3 times; default: 3 times)
 // - Can also be set via command-line argument for custom intervals
 // - System tray icon with Exit menu
 // - Single-instance enforcement (prevents multiple copies from running)
 // - Uses icon from %SystemRoot%\SYSTEM32\InputMethod\Shared\ResourceDll.dll index 3
+// - Sliding window detection: Only switches after detecting English mode consecutively
 
 #include "ime_common.h"
 #include <shellapi.h>
@@ -31,12 +33,17 @@ static const UINT WM_TRAYICON = WM_USER + 1;
 static const UINT_PTR TIMER_ID = 1;
 
 // Menu command IDs
-static const UINT ID_INTERVAL_100MS = 1001;
-static const UINT ID_INTERVAL_200MS = 1002;
-static const UINT ID_INTERVAL_500MS = 1003;
-static const UINT ID_EXIT = 1004;
+static const UINT ID_INTERVAL_50MS = 1001;
+static const UINT ID_INTERVAL_100MS = 1002;
+static const UINT ID_INTERVAL_200MS = 1003;
+static const UINT ID_INTERVAL_500MS = 1004;
+static const UINT ID_CONSECUTIVE_1 = 1005;
+static const UINT ID_CONSECUTIVE_2 = 1006;
+static const UINT ID_CONSECUTIVE_3 = 1007;
+static const UINT ID_EXIT = 1008;
 
 // Available check intervals in milliseconds
+static const DWORD INTERVAL_50MS = 50;
 static const DWORD INTERVAL_100MS = 100;
 static const DWORD INTERVAL_200MS = 200;
 static const DWORD INTERVAL_500MS = 500;
@@ -49,6 +56,8 @@ static HINSTANCE g_hInstance = nullptr;
 static HWND g_hwnd = nullptr;
 static NOTIFYICONDATAW g_nid = {};
 static DWORD g_checkIntervalMs = DEFAULT_CHECK_INTERVAL_MS;
+static UINT g_consecutiveChecks = 3; // Number of consecutive checks required (default: 3)
+static UINT g_englishModeCount = 0;  // Counter for consecutive English mode detections
 
 // Parse check interval from command-line arguments
 DWORD ParseCheckInterval(LPSTR lpCmdLine)
@@ -136,15 +145,31 @@ void ShowTrayMenu(HWND hwnd)
     // Add interval selection submenu
     HMENU hIntervalMenu = CreatePopupMenu();
     if (hIntervalMenu) {
+        UINT flags50 = MF_STRING | (g_checkIntervalMs == INTERVAL_50MS ? MF_CHECKED : MF_UNCHECKED);
         UINT flags100 = MF_STRING | (g_checkIntervalMs == INTERVAL_100MS ? MF_CHECKED : MF_UNCHECKED);
         UINT flags200 = MF_STRING | (g_checkIntervalMs == INTERVAL_200MS ? MF_CHECKED : MF_UNCHECKED);
         UINT flags500 = MF_STRING | (g_checkIntervalMs == INTERVAL_500MS ? MF_CHECKED : MF_UNCHECKED);
 
+        AppendMenuW(hIntervalMenu, flags50, ID_INTERVAL_50MS, L"50 ms");
         AppendMenuW(hIntervalMenu, flags100, ID_INTERVAL_100MS, L"100 ms");
         AppendMenuW(hIntervalMenu, flags200, ID_INTERVAL_200MS, L"200 ms");
         AppendMenuW(hIntervalMenu, flags500, ID_INTERVAL_500MS, L"500 ms");
 
         AppendMenuW(hMenu, MF_STRING | MF_POPUP, (UINT_PTR)hIntervalMenu, L"Check Interval");
+    }
+
+    // Add consecutive checks submenu
+    HMENU hConsecutiveMenu = CreatePopupMenu();
+    if (hConsecutiveMenu) {
+        UINT flags1 = MF_STRING | (g_consecutiveChecks == 1 ? MF_CHECKED : MF_UNCHECKED);
+        UINT flags2 = MF_STRING | (g_consecutiveChecks == 2 ? MF_CHECKED : MF_UNCHECKED);
+        UINT flags3 = MF_STRING | (g_consecutiveChecks == 3 ? MF_CHECKED : MF_UNCHECKED);
+
+        AppendMenuW(hConsecutiveMenu, flags1, ID_CONSECUTIVE_1, L"1 time");
+        AppendMenuW(hConsecutiveMenu, flags2, ID_CONSECUTIVE_2, L"2 times");
+        AppendMenuW(hConsecutiveMenu, flags3, ID_CONSECUTIVE_3, L"3 times");
+
+        AppendMenuW(hMenu, MF_STRING | MF_POPUP, (UINT_PTR)hConsecutiveMenu, L"Consecutive Checks");
     }
 
     AppendMenuW(hMenu, MF_SEPARATOR, 0, nullptr);
@@ -181,19 +206,34 @@ void OnTimer(HWND hwnd)
 
     wchar_t tooltip[256];
     if (isEnglishMode) {
-        // Get time before switching
-        GetLocalTime(&st);
-        wchar_t switchTime[64];
-        StringCchPrintfW(switchTime, ARRAYSIZE(switchTime),
-                         L"%02d:%02d:%02d.%03d", st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
+        // Increment consecutive English mode counter
+        g_englishModeCount++;
 
-        // Switch to English US keyboard
-        ActivateEnglishUS();
+        // Check if we've reached the required consecutive detections
+        if (g_englishModeCount >= g_consecutiveChecks) {
+            // Get time before switching
+            GetLocalTime(&st);
+            wchar_t switchTime[64];
+            StringCchPrintfW(switchTime, ARRAYSIZE(switchTime),
+                             L"%02d:%02d:%02d.%03d", st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
 
-        StringCchPrintfW(tooltip, ARRAYSIZE(tooltip),
-                         L"Timer: %s\nEnglish Mode: YES\nSwitched: %s",
-                         timerFireTime, switchTime);
+            // Switch to English US keyboard
+            ActivateEnglishUS();
+
+            // Reset counter after switching
+            g_englishModeCount = 0;
+
+            StringCchPrintfW(tooltip, ARRAYSIZE(tooltip),
+                             L"Timer: %s\nEnglish Mode: YES\nSwitched: %s",
+                             timerFireTime, switchTime);
+        } else {
+            StringCchPrintfW(tooltip, ARRAYSIZE(tooltip),
+                             L"Timer: %s\nEnglish Mode: YES (%u/%u)",
+                             timerFireTime, g_englishModeCount, g_consecutiveChecks);
+        }
     } else {
+        // Reset counter when not in English mode
+        g_englishModeCount = 0;
         StringCchPrintfW(tooltip, ARRAYSIZE(tooltip),
                          L"Timer: %s\nEnglish Mode: NO",
                          timerFireTime);
@@ -234,20 +274,41 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         case WM_COMMAND:
             switch (LOWORD(wParam)) {
+                case ID_INTERVAL_50MS:
+                    g_checkIntervalMs = INTERVAL_50MS;
+                    KillTimer(hwnd, TIMER_ID);
+                    SetTimer(hwnd, TIMER_ID, g_checkIntervalMs, nullptr);
+                    g_englishModeCount = 0; // Reset counter when changing interval
+                    break;
                 case ID_INTERVAL_100MS:
                     g_checkIntervalMs = INTERVAL_100MS;
                     KillTimer(hwnd, TIMER_ID);
                     SetTimer(hwnd, TIMER_ID, g_checkIntervalMs, nullptr);
+                    g_englishModeCount = 0; // Reset counter when changing interval
                     break;
                 case ID_INTERVAL_200MS:
                     g_checkIntervalMs = INTERVAL_200MS;
                     KillTimer(hwnd, TIMER_ID);
                     SetTimer(hwnd, TIMER_ID, g_checkIntervalMs, nullptr);
+                    g_englishModeCount = 0; // Reset counter when changing interval
                     break;
                 case ID_INTERVAL_500MS:
                     g_checkIntervalMs = INTERVAL_500MS;
                     KillTimer(hwnd, TIMER_ID);
                     SetTimer(hwnd, TIMER_ID, g_checkIntervalMs, nullptr);
+                    g_englishModeCount = 0; // Reset counter when changing interval
+                    break;
+                case ID_CONSECUTIVE_1:
+                    g_consecutiveChecks = 1;
+                    g_englishModeCount = 0; // Reset counter when changing threshold
+                    break;
+                case ID_CONSECUTIVE_2:
+                    g_consecutiveChecks = 2;
+                    g_englishModeCount = 0; // Reset counter when changing threshold
+                    break;
+                case ID_CONSECUTIVE_3:
+                    g_consecutiveChecks = 3;
+                    g_englishModeCount = 0; // Reset counter when changing threshold
                     break;
                 case ID_EXIT:
                     PostQuitMessage(0);
